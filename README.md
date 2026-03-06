@@ -35,3 +35,13 @@ Then open `http://localhost:4173`.
 - Build command: none required
 
 This repo is a static site and does not depend on a Node build step.
+
+## Project Context Files
+
+For future Codex or contributor sessions, start with `AGENTS.md`, then read:
+
+- `docs/PROJECT_CONTEXT.md`
+- `docs/NEXT_STEPS.md`
+- `docs/SESSION_HANDOFF.md`
+
+Those files capture the current homepage architecture, product direction, and next-priority work so new sessions can continue from the existing implementation instead of restarting.
