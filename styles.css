@@ -627,6 +627,8 @@ a {
 }
 
 .focus-scene__toolbar {
+  position: relative;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -643,6 +645,7 @@ a {
 .focus-galaxy {
   position: absolute;
   inset: 0;
+  z-index: 1;
 }
 
 .focus-galaxy__mist {
