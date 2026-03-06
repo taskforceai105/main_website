@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title>Grok placeholder badge</title>
+  <defs>
+    <radialGradient id="bg-grok" cx="30%" cy="25%" r="72%">
+      <stop offset="0%" stop-color="#def4ff"/>
+      <stop offset="45%" stop-color="#3e9eff"/>
+      <stop offset="100%" stop-color="#030813"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-grok)" stroke="#d4efff" stroke-opacity=".32"/>
+  <path d="M42 78V41h22c9 0 14 4 14 11 0 5-3 9-8 10l10 16H65l-8-13h-4v13H42zm11-22h9c3 0 5-2 5-4 0-3-2-4-5-4h-9v8z" fill="#f5fbff"/>
+  <text x="60" y="93" text-anchor="middle" fill="#d6eeff" font-family="Segoe UI, sans-serif" font-size="11" letter-spacing="3">GROK</text>
+</svg>

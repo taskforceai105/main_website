@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title>Claude placeholder badge</title>
+  <defs>
+    <radialGradient id="bg-claude" cx="35%" cy="25%" r="72%">
+      <stop offset="0%" stop-color="#ffe9d1"/>
+      <stop offset="48%" stop-color="#6d97ff"/>
+      <stop offset="100%" stop-color="#050d1b"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-claude)" stroke="#f7d4af" stroke-opacity=".4"/>
+  <circle cx="60" cy="60" r="44" fill="none" stroke="#ffe6c5" stroke-opacity=".14"/>
+  <text x="60" y="53" text-anchor="middle" fill="#fff6ea" font-family="Segoe UI, sans-serif" font-size="28" font-weight="700">CL</text>
+  <text x="60" y="77" text-anchor="middle" fill="#ffe6cf" font-family="Segoe UI, sans-serif" font-size="11" letter-spacing="3">CLAUDE</text>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title>OpenAI placeholder badge</title>
+  <defs>
+    <radialGradient id="bg-openai" cx="35%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="#86e8ff"/>
+      <stop offset="55%" stop-color="#0f6df0"/>
+      <stop offset="100%" stop-color="#07111d"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-openai)" stroke="#9ed8ff" stroke-opacity=".38"/>
+  <circle cx="60" cy="60" r="44" fill="none" stroke="#b4e6ff" stroke-opacity=".18"/>
+  <text x="60" y="53" text-anchor="middle" fill="#eef8ff" font-family="Segoe UI, sans-serif" font-size="28" font-weight="700">OA</text>
+  <text x="60" y="77" text-anchor="middle" fill="#d4eeff" font-family="Segoe UI, sans-serif" font-size="11" letter-spacing="3">OPENAI</text>
+</svg>

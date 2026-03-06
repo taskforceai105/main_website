@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title>Qwen placeholder badge</title>
+  <defs>
+    <radialGradient id="bg-qwen" cx="35%" cy="22%" r="72%">
+      <stop offset="0%" stop-color="#d8e6ff"/>
+      <stop offset="48%" stop-color="#00c4ff"/>
+      <stop offset="100%" stop-color="#050d1b"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-qwen)" stroke="#aee8ff" stroke-opacity=".34"/>
+  <text x="60" y="56" text-anchor="middle" fill="#eef7ff" font-family="Segoe UI, sans-serif" font-size="28" font-weight="700">QW</text>
+  <text x="60" y="81" text-anchor="middle" fill="#d7efff" font-family="Segoe UI, sans-serif" font-size="11" letter-spacing="3">QWEN</text>
+</svg>

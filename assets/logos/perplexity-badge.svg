@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title>Perplexity placeholder badge</title>
+  <defs>
+    <radialGradient id="bg-perplexity" cx="35%" cy="20%" r="72%">
+      <stop offset="0%" stop-color="#d7fff2"/>
+      <stop offset="45%" stop-color="#26d2ff"/>
+      <stop offset="100%" stop-color="#05101d"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-perplexity)" stroke="#a9fff0" stroke-opacity=".34"/>
+  <path d="M36 81V39h23c10 0 17 6 17 15s-7 15-17 15H47v12H36zm11-22h12c4 0 7-2 7-5s-3-5-7-5H47v10z" fill="#efffff"/>
+  <text x="60" y="95" text-anchor="middle" fill="#d8fff5" font-family="Segoe UI, sans-serif" font-size="9" letter-spacing="2.8">PERPLEXITY</text>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title>Gemini placeholder badge</title>
+  <defs>
+    <radialGradient id="bg-gemini" cx="32%" cy="24%" r="72%">
+      <stop offset="0%" stop-color="#d6e4ff"/>
+      <stop offset="35%" stop-color="#5aa0ff"/>
+      <stop offset="70%" stop-color="#2556ff"/>
+      <stop offset="100%" stop-color="#050d1b"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg-gemini)" stroke="#b9d6ff" stroke-opacity=".34"/>
+  <path d="M60 23l5 17 17 5-17 5-5 17-5-17-17-5 17-5 5-17z" fill="#f4f9ff"/>
+  <text x="60" y="84" text-anchor="middle" fill="#d8ebff" font-family="Segoe UI, sans-serif" font-size="11" letter-spacing="3">GEMINI</text>
+</svg>
