@@ -1,6 +1,10 @@
 # Det 105 AI Task Force
 
-An immersive static homepage for the Det 105 AI Task Force website. The current version is an AI universe / galaxy map experience built for Netlify deployment: a central command core, topic-sector galaxies, clickable planetary nodes, and a focused detail panel for exploration.
+An immersive static homepage for the Det 105 AI Task Force website. The current version is a cinematic 3-state AI universe experience built for Netlify deployment:
+
+- Intro screen
+- Universe map
+- Galaxy drilldown
 
 ## Local preview
 
@@ -14,9 +18,16 @@ Then open `http://localhost:4173`.
 
 ## Edit content
 
-- Update universe sectors, node positions, links, and copy in `scripts/site-data.js`.
+- Update galaxy, planet, and copy data in `scripts/data/universe.js`.
+- Update logo metadata in `scripts/data/logo-sources.js`.
 - Replace the command-core identity image in `assets/det105.png` if needed.
-- Fine-tune visual layout and motion in `styles.css`.
+- Fine-tune layout and transitions in `styles.css`.
+
+## Brand assets
+
+- Stable local copies live in `assets/logos/`.
+- Source notes are tracked in `scripts/data/logo-sources.js`.
+- Some concept nodes intentionally use monogram fallbacks when no clean public product asset is exposed.
 
 ## Netlify
 

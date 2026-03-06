@@ -1,259 +1,339 @@
-import { renderFooter, renderHeader, renderUniverseScene } from "./components.js";
-import { galaxyClusters, universeContent } from "./site-data.js";
+import { renderDetailPanel, renderFocusScene, renderFooter, renderHeader, renderScene } from "./components.js";
+import { galaxyClusters, universeContent } from "./data/universe.js";
 
 const prefersReducedMotion =
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const galaxyMap = new Map(
-  galaxyClusters.map((galaxy) => [
-    galaxy.id,
-    {
-      ...galaxy,
-      planets: galaxy.planets.map((planet) => ({ ...planet, galaxyId: galaxy.id, galaxyTitle: galaxy.title })),
-    },
-  ]),
-);
+const transitionDuration = prefersReducedMotion ? 0 : 1000;
 
-let activeGalaxyId = null;
-let activePlanetId = null;
-let revealObserver;
+const galaxyMap = new Map(galaxyClusters.map((galaxy) => [galaxy.id, galaxy]));
 
-const renderPage = () => `
-  <div class="page-shell">
-    ${renderHeader(universeContent)}
-    ${renderUniverseScene(universeContent, galaxyClusters)}
-    ${renderFooter(universeContent)}
-  </div>
-`;
-
-const getActiveGalaxy = () => (activeGalaxyId ? galaxyMap.get(activeGalaxyId) ?? null : null);
-
-const getActivePlanet = () => {
-  const galaxy = getActiveGalaxy();
-  return galaxy?.planets.find((planet) => planet.id === activePlanetId) ?? null;
+const appState = {
+  phase: "intro",
+  selectedGalaxyId: null,
+  selectedPlanetId: null,
+  universeBriefOpen: false,
+  transitionLock: false,
 };
 
-const setPanelContent = () => {
-  const panel = document.querySelector("[data-info-panel]");
-  const title = document.querySelector("[data-panel-title]");
-  const subtitle = document.querySelector("[data-panel-subtitle]");
-  const description = document.querySelector("[data-panel-description]");
-  const goodFor = document.querySelector("[data-panel-goodfor]");
-  const link = document.querySelector("[data-panel-link]");
-  const meta = document.querySelector("[data-panel-meta]");
-  const back = document.querySelector("[data-panel-back]");
+let rootElement;
+let detailPanel;
+let focusLayer;
+let transitionTimer;
 
-  if (!panel || !title || !subtitle || !description || !goodFor || !link || !meta || !back) {
-    return;
-  }
+const getGalaxy = () => (appState.selectedGalaxyId ? galaxyMap.get(appState.selectedGalaxyId) ?? null : null);
 
-  const galaxy = getActiveGalaxy();
-  const planet = getActivePlanet();
-
-  if (planet) {
-    panel.dataset.state = "planet";
-    panel.classList.add("is-open");
-    panel.style.setProperty("--panel-accent", galaxy.accent);
-    meta.textContent = `${galaxy.title} sector / ${planet.type}`;
-    title.textContent = planet.name;
-    subtitle.textContent = `Inside ${galaxy.title}`;
-    description.textContent = planet.description;
-    goodFor.textContent = planet.goodFor;
-    link.href = planet.href;
-    link.hidden = false;
-    back.hidden = false;
-    back.textContent = `Back to ${galaxy.title}`;
-    return;
-  }
-
-  if (galaxy) {
-    panel.dataset.state = "galaxy";
-    panel.classList.add("is-open");
-    panel.style.setProperty("--panel-accent", galaxy.accent);
-    meta.textContent = "Galaxy focus";
-    title.textContent = galaxy.title;
-    subtitle.textContent = galaxy.subtitle;
-    description.textContent = galaxy.description;
-    goodFor.textContent = galaxy.why;
-    link.href = galaxy.planets[0]?.href ?? "#";
-    link.hidden = !galaxy.planets[0]?.href;
-    back.hidden = true;
-    return;
-  }
-
-  panel.dataset.state = "galaxy";
-  panel.classList.add("is-open");
-  panel.style.setProperty("--panel-accent", "var(--accent)");
-  meta.textContent = "Universe overview";
-  title.textContent = universeContent.overviewTitle;
-  subtitle.textContent = universeContent.overviewSubtitle;
-  description.textContent = universeContent.overviewDescription;
-  goodFor.textContent = universeContent.overviewWhy;
-  link.href = "#";
-  link.hidden = true;
-  back.hidden = true;
+const getPlanet = () => {
+  const galaxy = getGalaxy();
+  return galaxy?.planets.find((planet) => planet.id === appState.selectedPlanetId) ?? null;
 };
 
-const syncSelectionState = () => {
-  document.querySelectorAll("[data-galaxy]").forEach((galaxyElement) => {
-    const isActive = galaxyElement.dataset.galaxyId === activeGalaxyId;
-    galaxyElement.classList.toggle("is-active", isActive);
-    galaxyElement.classList.toggle("is-dimmed", Boolean(activeGalaxyId) && !isActive);
-  });
+const withTransitionLock = (callback, duration = transitionDuration) => {
+  appState.transitionLock = true;
+  callback();
+  window.clearTimeout(transitionTimer);
+  transitionTimer = window.setTimeout(() => {
+    appState.transitionLock = false;
+    rootElement?.classList.remove("is-unveiling", "is-drilling", "is-returning");
+  }, duration);
+};
 
-  document.querySelectorAll("[data-legend-button]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.galaxyId === activeGalaxyId);
-  });
+const setFocusVars = (galaxy) => {
+  if (!rootElement) {
+    return;
+  }
 
-  document.querySelectorAll("[data-planet-button]").forEach((button) => {
-    const parentGalaxy = button.closest("[data-galaxy]")?.dataset.galaxyId;
-    const isPlanetActive = button.dataset.planetId === activePlanetId;
-    button.classList.toggle("is-active", isPlanetActive);
-    button.classList.toggle(
-      "is-muted",
-      Boolean(activeGalaxyId) && parentGalaxy !== activeGalaxyId,
-    );
+  if (!galaxy) {
+    rootElement.style.setProperty("--travel-x", "0%");
+    rootElement.style.setProperty("--travel-y", "0%");
+    rootElement.style.setProperty("--travel-accent", "#74beff");
+    return;
+  }
+
+  rootElement.style.setProperty("--travel-x", `${50 - galaxy.universeX}%`);
+  rootElement.style.setProperty("--travel-y", `${50 - galaxy.universeY}%`);
+  rootElement.style.setProperty("--travel-accent", galaxy.accent);
+};
+
+const updateHeader = () => {
+  const status = document.querySelector("[data-header-state]");
+  const briefToggle = document.querySelector("[data-open-brief]");
+
+  if (!status) {
+    return;
+  }
+
+  if (appState.phase === "intro") {
+    status.textContent = "Stand by";
+    if (briefToggle) {
+      briefToggle.textContent = "Universe Brief";
+      briefToggle.disabled = true;
+    }
+    return;
+  }
+
+  if (appState.phase === "universe") {
+    status.textContent = "Universe Map";
+    if (briefToggle) {
+      briefToggle.textContent = appState.universeBriefOpen ? "Hide Brief" : "Universe Brief";
+      briefToggle.disabled = false;
+    }
+    return;
+  }
+
+  const galaxy = getGalaxy();
+  status.textContent = galaxy ? `${galaxy.title} Drilldown` : "Galaxy Drilldown";
+  if (briefToggle) {
+    briefToggle.textContent = "Universe Brief";
+    briefToggle.disabled = true;
+  }
+};
+
+const updateUniverseLayer = () => {
+  document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
+    const isSelected = button.dataset.galaxyId === appState.selectedGalaxyId;
+    button.classList.toggle("is-selected", isSelected);
   });
 };
 
-const focusGalaxy = (galaxyId, { resetPlanet = true } = {}) => {
-  if (!galaxyMap.has(galaxyId)) {
+const updateUniverseBrief = () => {
+  const brief = document.querySelector("[data-universe-brief]");
+  if (!brief) {
     return;
   }
 
-  activeGalaxyId = galaxyId;
-  if (resetPlanet) {
-    activePlanetId = null;
-  }
-
-  syncSelectionState();
-  setPanelContent();
+  brief.hidden = !(appState.phase === "universe" && appState.universeBriefOpen);
 };
 
-const focusPlanet = (planetId) => {
-  for (const galaxy of galaxyMap.values()) {
-    const planet = galaxy.planets.find((candidate) => candidate.id === planetId);
-    if (planet) {
-      activeGalaxyId = galaxy.id;
-      activePlanetId = planet.id;
-      syncSelectionState();
-      setPanelContent();
+const bindFocusSceneEvents = () => {
+  focusLayer?.querySelector("[data-back-universe]")?.addEventListener("click", () => {
+    if (appState.transitionLock) {
       return;
     }
-  }
+
+    rootElement.classList.add("is-returning");
+    appState.selectedPlanetId = null;
+    withTransitionLock(() => {
+      appState.phase = "galaxy";
+      updateDetailPanel();
+      window.setTimeout(() => {
+        appState.phase = "universe";
+        appState.selectedGalaxyId = null;
+        appState.universeBriefOpen = false;
+        setFocusVars(null);
+        updateScene();
+      }, transitionDuration * 0.62);
+    }, transitionDuration);
+  });
+
+  focusLayer?.querySelectorAll("[data-planet-button]").forEach((button) => {
+    button.addEventListener("click", () => {
+      appState.selectedPlanetId = button.dataset.planetId;
+      updateDetailPanel();
+    });
+  });
 };
 
-const closePanel = () => {
-  activeGalaxyId = null;
-  activePlanetId = null;
-  setPanelContent();
-  syncSelectionState();
+const updateFocusScene = () => {
+  if (!focusLayer) {
+    return;
+  }
+
+  if (appState.phase !== "galaxy") {
+    focusLayer.innerHTML = "";
+    return;
+  }
+
+  const galaxy = getGalaxy();
+  if (!galaxy) {
+    focusLayer.innerHTML = "";
+    return;
+  }
+
+  focusLayer.innerHTML = renderFocusScene(galaxy);
+  bindFocusSceneEvents();
+};
+
+const updateDetailPanel = () => {
+  if (!detailPanel) {
+    return;
+  }
+
+  if (appState.phase !== "galaxy" || !appState.selectedPlanetId) {
+    detailPanel.hidden = true;
+    detailPanel.innerHTML = "";
+    return;
+  }
+
+  const galaxy = getGalaxy();
+  if (!galaxy) {
+    detailPanel.hidden = true;
+    detailPanel.innerHTML = "";
+    return;
+  }
+
+  const planet = getPlanet();
+  if (!planet) {
+    detailPanel.hidden = true;
+    detailPanel.innerHTML = "";
+    return;
+  }
+
+  detailPanel.hidden = false;
+  detailPanel.innerHTML = renderDetailPanel({ galaxy, planet });
+  detailPanel.style.setProperty("--panel-accent", galaxy.accent);
+
+  detailPanel.querySelector("[data-close-detail]")?.addEventListener("click", () => {
+    appState.selectedPlanetId = null;
+    updateDetailPanel();
+  });
+
+  detailPanel.querySelector("[data-back-galaxy]")?.addEventListener("click", () => {
+    appState.selectedPlanetId = null;
+    updateDetailPanel();
+  });
+};
+
+const updateScene = () => {
+  if (!rootElement) {
+    return;
+  }
+
+  rootElement.dataset.phase = appState.phase;
+  updateHeader();
+  updateUniverseLayer();
+  updateUniverseBrief();
+  updateFocusScene();
+  updateDetailPanel();
+};
+
+const enterUniverse = () => {
+  if (appState.transitionLock) {
+    return;
+  }
+
+  appState.phase = "universe";
+  appState.universeBriefOpen = false;
+  rootElement.classList.add("is-unveiling");
+  updateScene();
+  withTransitionLock(() => {}, transitionDuration);
+};
+
+const enterGalaxy = (galaxyId) => {
+  if (appState.transitionLock || !galaxyMap.has(galaxyId)) {
+    return;
+  }
+
+  const galaxy = galaxyMap.get(galaxyId);
+  appState.phase = "galaxy";
+  appState.selectedGalaxyId = galaxyId;
+  appState.selectedPlanetId = null;
+  appState.universeBriefOpen = false;
+  setFocusVars(galaxy);
+  rootElement.classList.add("is-drilling");
+  updateScene();
+  withTransitionLock(() => {}, transitionDuration);
 };
 
 const setupInteractions = () => {
   document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
-    button.addEventListener("click", () => focusGalaxy(button.dataset.galaxyId));
+    button.addEventListener("click", () => enterGalaxy(button.dataset.galaxyId));
   });
 
-  document.querySelectorAll("[data-legend-button]").forEach((button) => {
-    button.addEventListener("click", () => focusGalaxy(button.dataset.galaxyId));
+  document.querySelector("[data-enter-universe]")?.addEventListener("click", enterUniverse);
+  document.querySelector("[data-skip-intro]")?.addEventListener("click", enterUniverse);
+
+  document.querySelector("[data-close-brief]")?.addEventListener("click", () => {
+    appState.universeBriefOpen = false;
+    updateUniverseBrief();
   });
 
-  document.querySelectorAll("[data-planet-button]").forEach((button) => {
-    button.addEventListener("click", () => focusPlanet(button.dataset.planetId));
-  });
+  document.querySelector("[data-open-brief]")?.addEventListener("click", () => {
+    if (appState.phase !== "universe") {
+      return;
+    }
 
-  document.querySelector("[data-panel-close]")?.addEventListener("click", closePanel);
-
-  document.querySelector("[data-panel-back]")?.addEventListener("click", () => {
-    activePlanetId = null;
-    setPanelContent();
-    syncSelectionState();
-  });
-
-  document.querySelector("[data-focus-core]")?.addEventListener("click", () => {
-    activeGalaxyId = null;
-    activePlanetId = null;
-    setPanelContent();
-    syncSelectionState();
-    document.querySelector("[data-universe-wrapper]")?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth" });
+    appState.universeBriefOpen = !appState.universeBriefOpen;
+    updateUniverseBrief();
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      closePanel();
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    if (appState.phase === "intro") {
+      enterUniverse();
+      return;
+    }
+
+    if (appState.selectedPlanetId) {
+      appState.selectedPlanetId = null;
+      updateDetailPanel();
+      return;
+    }
+
+    if (appState.phase === "galaxy" && !appState.transitionLock) {
+      focusLayer?.querySelector("[data-back-universe]")?.click();
+      return;
+    }
+
+    if (appState.phase === "universe" && appState.universeBriefOpen) {
+      appState.universeBriefOpen = false;
+      updateUniverseBrief();
     }
   });
 };
 
 const setupParallax = () => {
-  const scene = document.querySelector("[data-universe-scene]");
+  const stage = document.querySelector("[data-scene-stage]");
 
-  if (!scene || prefersReducedMotion) {
+  if (!stage || prefersReducedMotion) {
     return;
   }
 
   const reset = () => {
-    scene.style.setProperty("--pointer-x", "0px");
-    scene.style.setProperty("--pointer-y", "0px");
+    rootElement.style.setProperty("--pointer-x", "0px");
+    rootElement.style.setProperty("--pointer-y", "0px");
   };
 
-  scene.addEventListener("pointermove", (event) => {
-    const bounds = scene.getBoundingClientRect();
+  stage.addEventListener("pointermove", (event) => {
+    const bounds = stage.getBoundingClientRect();
     const offsetX = event.clientX - bounds.left - bounds.width / 2;
     const offsetY = event.clientY - bounds.top - bounds.height / 2;
-    scene.style.setProperty("--pointer-x", `${offsetX * 0.015}px`);
-    scene.style.setProperty("--pointer-y", `${offsetY * 0.018}px`);
+    rootElement.style.setProperty("--pointer-x", `${offsetX * 0.015}px`);
+    rootElement.style.setProperty("--pointer-y", `${offsetY * 0.018}px`);
   });
 
-  scene.addEventListener("pointerleave", reset);
+  stage.addEventListener("pointerleave", reset);
 };
 
-const setupScrollDepth = () => {
-  const wrapper = document.querySelector("[data-universe-wrapper]");
-  const scene = document.querySelector("[data-universe-scene]");
-
-  if (!wrapper || !scene || prefersReducedMotion) {
+const applyDebugStateFromUrl = () => {
+  if (typeof window === "undefined") {
     return;
   }
 
-  const update = () => {
-    const rect = wrapper.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-    const total = Math.max(rect.height - windowHeight, 1);
-    const progress = Math.min(Math.max(-rect.top / total, 0), 1);
-    scene.style.setProperty("--scroll-depth", progress.toFixed(3));
-  };
+  const params = new URLSearchParams(window.location.search);
+  const phase = params.get("phase");
+  const galaxy = params.get("galaxy");
+  const planet = params.get("planet");
 
-  update();
-  window.addEventListener("scroll", update, { passive: true });
-  window.addEventListener("resize", update);
-};
-
-const revealElements = () => {
-  const elements = document.querySelectorAll("[data-reveal]");
-
-  if (prefersReducedMotion) {
-    elements.forEach((element) => element.classList.add("is-visible"));
-    return;
+  if (phase === "universe") {
+    appState.phase = "universe";
+    appState.universeBriefOpen = params.get("brief") === "open";
   }
 
-  revealObserver?.disconnect();
-
-  revealObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.18 },
-  );
-
-  elements.forEach((element) => revealObserver.observe(element));
+  if (phase === "galaxy" && galaxyMap.has(galaxy)) {
+    appState.phase = "galaxy";
+    appState.selectedGalaxyId = galaxy;
+    appState.universeBriefOpen = false;
+    setFocusVars(galaxyMap.get(galaxy));
+    if (planet) {
+      const target = galaxyMap.get(galaxy).planets.find((entry) => entry.id === planet);
+      appState.selectedPlanetId = target?.id ?? null;
+    }
+  }
 };
 
 export const boot = (root = document.getElementById("app")) => {
@@ -261,12 +341,23 @@ export const boot = (root = document.getElementById("app")) => {
     return;
   }
 
-  root.innerHTML = renderPage();
+  root.innerHTML = `
+    <div class="page-shell app-shell" data-phase="intro">
+      ${renderHeader(universeContent)}
+      ${renderScene(universeContent, galaxyClusters)}
+      ${renderFooter(universeContent)}
+    </div>
+  `;
+
+  rootElement = root.querySelector(".app-shell");
+  detailPanel = root.querySelector("[data-detail-panel]");
+  focusLayer = root.querySelector("[data-focus-layer]");
+
+  setFocusVars(null);
+  applyDebugStateFromUrl();
+  updateScene();
   setupInteractions();
   setupParallax();
-  setupScrollDepth();
-  revealElements();
-  closePanel();
 };
 
 if (typeof document !== "undefined") {

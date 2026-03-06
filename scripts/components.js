@@ -1,3 +1,5 @@
+import { logoCatalog } from "./data/logo-sources.js";
+
 const escapeHtml = (value) =>
   String(value)
     .replaceAll("&", "&amp;")
@@ -15,211 +17,240 @@ const renderStarLayer = (count, layer) => `
     ${Array.from({ length: count }, (_, index) => {
       const x = Math.round(seeded(index, layer.length + 1) * 1000) / 10;
       const y = Math.round(seeded(index, layer.length + 2) * 1000) / 10;
-      const size = 1 + seeded(index, layer.length + 3) * 2.8;
-      const alpha = 0.35 + seeded(index, layer.length + 4) * 0.65;
-      const delay = seeded(index, layer.length + 5) * 6;
-      return `
-        <span
-          class="star"
-          style="--x:${x}%; --y:${y}%; --size:${size}px; --alpha:${alpha}; --delay:${delay}s;"
-        ></span>
-      `;
+      const size = (0.9 + seeded(index, layer.length + 3) * 2.6).toFixed(2);
+      const alpha = (0.28 + seeded(index, layer.length + 4) * 0.72).toFixed(2);
+      const delay = (seeded(index, layer.length + 5) * 6).toFixed(2);
+      return `<span class="star" style="--x:${x}%; --y:${y}%; --size:${size}px; --alpha:${alpha}; --delay:${delay}s;"></span>`;
     }).join("")}
   </div>
 `;
 
-const renderPlanet = (planet) => {
-  const dx = planet.x - 50;
-  const dy = planet.y - 50;
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-  const distance = Math.sqrt(dx * dx + dy * dy);
+const renderLogoMark = (logoKey, label) => {
+  const logo = logoCatalog[logoKey];
 
-  return `
-    <button
-      class="planet-node planet-node--${planet.size}"
-      type="button"
-      style="--planet-x:${planet.x}%; --planet-y:${planet.y}%; --trace-angle:${angle}deg; --trace-length:${distance}%;"
-      data-planet-button
-      data-planet-id="${planet.id}"
-    >
-      <span class="planet-node__trace" aria-hidden="true"></span>
-      <span class="planet-node__body"></span>
-      <span class="planet-node__label">
-        <strong>${escapeHtml(planet.name)}</strong>
-        <span>${escapeHtml(planet.type)}</span>
-      </span>
-    </button>
-  `;
+  if (!logo) {
+    return `<span class="mark-badge__mono">${escapeHtml(label.slice(0, 2).toUpperCase())}</span>`;
+  }
+
+  if (logo.type === "image") {
+    return `<img src="${logo.src}" alt="${escapeHtml(logo.alt)}" class="mark-badge__image mark-badge__image--${logo.fit}" />`;
+  }
+
+  return `<span class="mark-badge__mono">${escapeHtml(logo.text)}</span>`;
 };
 
-const renderGalaxy = (galaxy, index) => `
-  <article
-    class="galaxy-cluster${index === 0 ? " is-active" : ""}"
-    style="--cluster-x:${galaxy.x}%; --cluster-y:${galaxy.y}%; --cluster-size:${galaxy.size}px; --cluster-accent:${galaxy.accent}; --cluster-accent-soft:${galaxy.accentSoft};"
-    data-galaxy
+const renderGalaxyNode = (galaxy) => `
+  <button
+    class="galaxy-node"
+    type="button"
+    style="--galaxy-x:${galaxy.universeX}%; --galaxy-y:${galaxy.universeY}%; --galaxy-accent:${galaxy.accent}; --galaxy-accent-soft:${galaxy.accentSoft};"
+    data-galaxy-button
     data-galaxy-id="${galaxy.id}"
   >
-    <button class="galaxy-cluster__core" type="button" data-galaxy-button data-galaxy-id="${galaxy.id}">
-      <span class="galaxy-cluster__aura" aria-hidden="true"></span>
-      <span class="galaxy-cluster__pulse" aria-hidden="true"></span>
-      <span class="galaxy-cluster__halo" aria-hidden="true"></span>
-      <span class="galaxy-cluster__label">
-        <strong>${escapeHtml(galaxy.title)}</strong>
-        <span>${escapeHtml(galaxy.subtitle)}</span>
-      </span>
-    </button>
-    <div class="galaxy-cluster__system">
-      ${galaxy.planets.map(renderPlanet).join("")}
-    </div>
-  </article>
+    <span class="galaxy-node__rings" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <span class="galaxy-node__orb" aria-hidden="true"></span>
+    <span class="galaxy-node__label">
+      <strong>${escapeHtml(galaxy.title)}</strong>
+      <span>${escapeHtml(galaxy.subtitle)}</span>
+    </span>
+  </button>
 `;
 
-const renderLegend = (galaxies) => `
-  <div class="universe-legend" data-reveal>
-    ${galaxies
-      .map(
-        (galaxy, index) => `
-          <button
-            class="legend-chip${index === 0 ? " is-active" : ""}"
-            type="button"
-            data-legend-button
-            data-galaxy-id="${galaxy.id}"
-          >
-            <span class="legend-chip__swatch" style="--swatch:${galaxy.accent};"></span>
-            <span class="legend-chip__title">${escapeHtml(galaxy.title)}</span>
-            <span class="legend-chip__count">${galaxy.planets.length} nodes</span>
-          </button>
-        `,
-      )
-      .join("")}
-  </div>
+const renderPlanetNode = (planet, accent) => `
+  <button
+    class="planet-node planet-node--${planet.size}"
+    type="button"
+    style="--planet-x:${planet.focusX}%; --planet-y:${planet.focusY}%; --planet-accent:${accent};"
+    data-planet-button
+    data-planet-id="${planet.id}"
+  >
+    <span class="planet-node__halo" aria-hidden="true"></span>
+    <span class="planet-node__ring" aria-hidden="true"></span>
+    <span class="planet-node__badge mark-badge">
+      ${renderLogoMark(planet.logoKey, planet.name)}
+    </span>
+    <span class="planet-node__label">
+      <strong>${escapeHtml(planet.name)}</strong>
+      <span>${escapeHtml(planet.type)}</span>
+    </span>
+  </button>
 `;
 
 export const renderHeader = (content) => `
-  <header class="minimal-header" data-reveal>
-    <div class="minimal-header__inner">
-      <div class="minimal-header__brand">
-        <span class="minimal-header__crest">
-          <img src="assets/det105.png" alt="" />
-        </span>
-        <div>
-          <p class="minimal-header__eyebrow">${escapeHtml(content.heading)}</p>
-          <h1 class="minimal-header__title">
-            ${escapeHtml(content.title)}
-            <span>${escapeHtml(content.subtitle)}</span>
-          </h1>
-        </div>
+  <header class="app-header">
+    <div class="app-header__brand">
+      <span class="app-header__crest">
+        <img src="assets/det105.png" alt="" />
+      </span>
+      <div>
+        <p class="app-header__eyebrow">Det 105 AI Task Force</p>
+        <h1 class="app-header__title">AI Universe</h1>
       </div>
-      <p class="minimal-header__copy">${escapeHtml(content.supportingLine)}</p>
+    </div>
+    <div class="app-header__actions">
+      <button class="header-chip" type="button" data-open-brief>Universe Brief</button>
+      <span class="header-state" data-header-state>${escapeHtml(content.subtitle)}</span>
     </div>
   </header>
 `;
 
-export const renderUniverseScene = (content, galaxies) => `
-  <main class="universe-page">
-    <section class="universe-intro section-shell" data-reveal>
-      <div class="universe-intro__copy">
-        <span class="universe-intro__eyebrow">Explorable Knowledge Map</span>
-        <h2>Explore the AI universe.</h2>
-        <p>${escapeHtml(content.missionLine)}</p>
-      </div>
-      <div class="universe-intro__actions">
-        <a class="universe-button" href="#universe-map">Enter Map</a>
-        <button class="universe-button universe-button--ghost" type="button" data-focus-core>
-          Focus Command Core
+export const renderIntroOverlay = (content) => `
+  <div class="intro-overlay" data-intro-overlay>
+    <div class="intro-overlay__backdrop"></div>
+    <div class="intro-overlay__panel">
+      <span class="intro-overlay__eyebrow">Command Cosmos</span>
+      <h2 class="intro-overlay__title">${escapeHtml(content.title)}</h2>
+      <p class="intro-overlay__subtitle">${escapeHtml(content.subtitle)}</p>
+      <p class="intro-overlay__copy">${escapeHtml(content.teaser)}</p>
+      <p class="intro-overlay__detail">${escapeHtml(content.introPrompt)}</p>
+      <div class="intro-overlay__actions">
+        <button class="scene-button" type="button" data-enter-universe>
+          ${escapeHtml(content.enterLabel)}
+        </button>
+        <button class="scene-button scene-button--ghost" type="button" data-skip-intro>
+          ${escapeHtml(content.skipLabel)}
         </button>
       </div>
-    </section>
+    </div>
+  </div>
+`;
 
-    <section class="universe-wrap" id="universe-map" data-universe-wrapper>
-      <div class="universe-sticky">
-        <div class="universe-scene" data-universe-scene>
-          ${renderStarLayer(130, "deep")}
-          ${renderStarLayer(90, "mid")}
-          ${renderStarLayer(65, "near")}
-          <div class="nebula nebula--north" aria-hidden="true"></div>
-          <div class="nebula nebula--east" aria-hidden="true"></div>
-          <div class="nebula nebula--south" aria-hidden="true"></div>
-          <div class="cosmic-grid" aria-hidden="true"></div>
-          <div class="light-column light-column--left" aria-hidden="true"></div>
-          <div class="light-column light-column--right" aria-hidden="true"></div>
+export const renderUniverseBrief = (content) => `
+  <aside class="universe-brief" data-universe-brief>
+    <button class="panel-close" type="button" data-close-brief aria-label="Close universe brief">
+      Close
+    </button>
+    <span class="panel-kicker">Universe Map</span>
+    <h3>${escapeHtml(content.universeBriefTitle)}</h3>
+    <p>${escapeHtml(content.universeBriefText)}</p>
+  </aside>
+`;
 
-          <div class="command-core" data-command-core>
-            <div class="command-core__rings" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <div class="command-core__shell">
-              <div class="command-core__logo-wrap">
-                <img src="assets/det105.png" alt="Det 105 AI Task Force logo" class="command-core__logo" />
-              </div>
-            </div>
-            <div class="command-core__text">
-              <p>Det 105 Command Core</p>
-              <strong>Central AI Universe Hub</strong>
-              <span>Anchor node for student exploration across the surrounding AI sectors.</span>
-            </div>
+export const renderScene = (content, galaxies) => `
+  <main class="scene-shell">
+    <section class="scene-stage" data-scene-stage>
+      ${renderStarLayer(120, "deep")}
+      ${renderStarLayer(80, "mid")}
+      ${renderStarLayer(50, "near")}
+      <div class="nebula nebula--north" aria-hidden="true"></div>
+      <div class="nebula nebula--east" aria-hidden="true"></div>
+      <div class="nebula nebula--south" aria-hidden="true"></div>
+      <div class="scene-vignette" aria-hidden="true"></div>
+      <div class="scene-grid" aria-hidden="true"></div>
+      <div class="scene-travel" aria-hidden="true"></div>
+
+      <div class="command-core" data-command-core>
+        <span class="command-core__rings" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <div class="command-core__shell">
+          <div class="command-core__logo-wrap">
+            <img src="assets/det105.png" alt="Det 105 AI Task Force logo" class="command-core__logo" />
           </div>
-
-          <div class="cluster-field" data-cluster-field>
-            ${galaxies.map(renderGalaxy).join("")}
-          </div>
-
-          ${renderLegend(galaxies)}
-
-          <aside class="info-panel" data-info-panel data-state="galaxy" aria-live="polite">
-            <button class="info-panel__close" type="button" data-panel-close aria-label="Close detail panel">
-              Close
-            </button>
-            <div class="info-panel__eyebrow" data-panel-meta>Galaxy focus</div>
-            <h3 class="info-panel__title" data-panel-title></h3>
-            <p class="info-panel__subtitle" data-panel-subtitle></p>
-            <p class="info-panel__description" data-panel-description></p>
-            <div class="info-panel__callout">
-              <span>Why it matters</span>
-              <p data-panel-goodfor></p>
-            </div>
-            <div class="info-panel__actions">
-              <a class="info-panel__link" data-panel-link target="_blank" rel="noreferrer">
-                Open official link
-              </a>
-              <button class="info-panel__secondary" type="button" data-panel-back>
-                Back to sector
-              </button>
-            </div>
-          </aside>
+        </div>
+        <div class="command-core__text">
+          <p>Det 105 Command Core</p>
+          <strong>AI Universe Hub</strong>
+          <span>Central identity node for galaxy-scale exploration.</span>
         </div>
       </div>
+
+      <div class="universe-layer" data-universe-layer>
+        ${galaxies.map(renderGalaxyNode).join("")}
+      </div>
+
+      <div class="focus-layer" data-focus-layer aria-live="polite"></div>
+
+      ${renderUniverseBrief(content)}
+
+      <aside class="detail-panel" data-detail-panel hidden></aside>
     </section>
 
-    <section class="command-deck section-shell">
-      ${content.commandDeck
-        .map(
-          (item) => `
-            <article class="command-card" data-reveal>
-              <span class="command-card__label">${escapeHtml(item.label)}</span>
-              <strong>${escapeHtml(item.value)}</strong>
-              <p>${escapeHtml(item.text)}</p>
-            </article>
-          `,
-        )
-        .join("")}
-    </section>
+    ${renderIntroOverlay(content)}
   </main>
 `;
 
+export const renderFocusScene = (galaxy) => `
+  <div
+    class="focus-scene"
+    style="--focus-accent:${galaxy.accent}; --focus-accent-soft:${galaxy.accentSoft};"
+  >
+    <div class="focus-scene__toolbar">
+      <button class="back-control" type="button" data-back-universe>
+        Back to Universe
+      </button>
+      <span class="focus-scene__meta">Galaxy Drilldown</span>
+    </div>
+
+    <div class="focus-galaxy">
+      <span class="focus-galaxy__mist focus-galaxy__mist--a" aria-hidden="true"></span>
+      <span class="focus-galaxy__mist focus-galaxy__mist--b" aria-hidden="true"></span>
+      <span class="focus-galaxy__mist focus-galaxy__mist--c" aria-hidden="true"></span>
+      <div class="focus-galaxy__core">
+        <span class="focus-galaxy__core-rings" aria-hidden="true">
+          <span></span>
+          <span></span>
+        </span>
+        <div class="focus-galaxy__core-copy">
+          <span class="panel-kicker">Destination Locked</span>
+          <h2>${escapeHtml(galaxy.focusTitle)}</h2>
+          <p>${escapeHtml(galaxy.focusCopy)}</p>
+        </div>
+      </div>
+
+      <div class="focus-planets">
+        ${galaxy.planets.map((planet) => renderPlanetNode(planet, galaxy.accent)).join("")}
+      </div>
+    </div>
+  </div>
+`;
+
+export const renderDetailPanel = ({ galaxy, planet }) => {
+  const isPlanet = Boolean(planet);
+  const title = isPlanet ? planet.name : galaxy.focusTitle;
+  const typeLine = isPlanet ? `${galaxy.title} / ${planet.type}` : galaxy.subtitle;
+  const description = isPlanet ? planet.description : galaxy.description;
+  const why = isPlanet ? planet.goodFor : galaxy.why;
+  const href = isPlanet ? planet.href : null;
+
+  return `
+    <button class="panel-close" type="button" data-close-detail aria-label="Close detail panel">
+      Close
+    </button>
+    <span class="panel-kicker">${isPlanet ? "Tool Brief" : "Galaxy Brief"}</span>
+    <h3>${escapeHtml(title)}</h3>
+    <p class="detail-panel__subtitle">${escapeHtml(typeLine)}</p>
+    <p class="detail-panel__description">${escapeHtml(description)}</p>
+    <div class="detail-panel__callout">
+      <span>Why it matters</span>
+      <p>${escapeHtml(why)}</p>
+    </div>
+    <div class="detail-panel__actions">
+      ${
+        href
+          ? `<a class="scene-button" href="${href}" target="_blank" rel="noreferrer">Open official link</a>`
+          : ""
+      }
+      ${
+        isPlanet
+          ? `<button class="scene-button scene-button--ghost" type="button" data-back-galaxy>Back to galaxy</button>`
+          : ""
+      }
+    </div>
+  `;
+};
+
 export const renderFooter = (content) => `
   <footer class="site-footer">
-    <div class="site-footer__inner">
-      <div>
-        <p class="site-footer__title">${escapeHtml(content.footerNote)}</p>
-        <p class="site-footer__copy">${escapeHtml(content.footerDisclaimer)}</p>
-      </div>
-      <p class="site-footer__meta">
-        <span>Interactive AI galaxy homepage</span>
-        <span>Structured data, static deploy, Netlify-safe</span>
-      </p>
+    <div>
+      <p class="site-footer__title">${escapeHtml(content.footerNote)}</p>
+      <p class="site-footer__copy">${escapeHtml(content.footerDisclaimer)}</p>
     </div>
   </footer>
 `;

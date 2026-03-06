@@ -1,0 +1,425 @@
+export const universeContent = {
+  title: "DET 105 AI TASK FORCE",
+  subtitle: "Explore the AI Universe",
+  teaser: "A futuristic map of AI tools, topics, and ecosystems.",
+  introPrompt:
+    "A cinematic command-cosmos built for students who need orientation first, detail second, and clutter nowhere.",
+  enterLabel: "Explore the AI Universe",
+  skipLabel: "Skip Intro",
+  universeBriefTitle: "Universe Map",
+  universeBriefText:
+    "Select a galaxy-scale destination to travel deeper. The universe layer shows only major AI sectors by design.",
+  footerNote: "Det 105 AI Task Force - Student AI Exploration Hub",
+  footerDisclaimer:
+    "Brand assets are sourced from official public origins where practical. Tool access and availability may change.",
+};
+
+export const galaxyClusters = [
+  {
+    id: "llms",
+    title: "LLMs",
+    subtitle: "Frontline assistant systems",
+    accent: "#74beff",
+    accentSoft: "rgba(116, 190, 255, 0.26)",
+    description:
+      "General-purpose model platforms for drafting, analysis, multimodal work, and broad problem solving.",
+    why:
+      "This is the most common entry point for students evaluating modern AI capability.",
+    universeX: 19,
+    universeY: 33,
+    focusTitle: "LLM Galaxy",
+    focusCopy:
+      "The language-model sector concentrates mainstream assistant platforms and the fastest route into daily AI workflows.",
+    planets: [
+      {
+        id: "chatgpt",
+        name: "ChatGPT",
+        type: "Assistant",
+        logoKey: "chatgpt",
+        focusX: 18,
+        focusY: 54,
+        size: "lg",
+        description:
+          "A flexible multimodal assistant for writing, planning, code help, image work, and general-purpose AI workflows.",
+        goodFor: "Strong all-around starting point for student AI exploration.",
+        href: "https://openai.com/chatgpt/overview/",
+      },
+      {
+        id: "gemini",
+        name: "Gemini",
+        type: "Assistant",
+        logoKey: "gemini",
+        focusX: 74,
+        focusY: 26,
+        size: "md",
+        description:
+          "Google's broad assistant ecosystem with strong ties to search, docs, and productivity workflows.",
+        goodFor: "Useful when your work already lives in Google's ecosystem.",
+        href: "https://gemini.google.com/",
+      },
+      {
+        id: "claude",
+        name: "Claude",
+        type: "Assistant",
+        logoKey: "claude",
+        focusX: 31,
+        focusY: 76,
+        size: "md",
+        description:
+          "Known for polished long-form responses, careful writing, and strong document-oriented reasoning.",
+        goodFor: "Excellent for reading, synthesis, and structured writing tasks.",
+        href: "https://www.anthropic.com/claude",
+      },
+      {
+        id: "grok",
+        name: "Grok",
+        type: "Assistant",
+        logoKey: "grok",
+        focusX: 78,
+        focusY: 63,
+        size: "sm",
+        description:
+          "An xAI assistant aimed at fast ideation and current-information workflows.",
+        goodFor: "Useful for quick exploration and web-aware interaction patterns.",
+        href: "https://x.ai/grok",
+      },
+      {
+        id: "qwen",
+        name: "Qwen",
+        type: "Assistant",
+        logoKey: "qwen",
+        focusX: 52,
+        focusY: 18,
+        size: "sm",
+        description:
+          "A major frontier model family and chat surface for broader ecosystem comparison.",
+        goodFor: "Good for exploring model variety beyond the most common defaults.",
+        href: "https://qwen.ai/",
+      },
+    ],
+  },
+  {
+    id: "coding",
+    title: "Coding Tools",
+    subtitle: "Developer acceleration systems",
+    accent: "#88f2ff",
+    accentSoft: "rgba(136, 242, 255, 0.22)",
+    description:
+      "Terminal agents, AI IDEs, and code-native systems that reshape software workflows.",
+    why:
+      "This region matters once students move from asking questions to building with AI directly in technical environments.",
+    universeX: 77,
+    universeY: 29,
+    focusTitle: "Coding Tools Galaxy",
+    focusCopy:
+      "This sector shifts from general chat into execution: repositories, editors, terminals, refactors, and agent-style coding loops.",
+    planets: [
+      {
+        id: "codex-cli",
+        name: "Codex CLI",
+        type: "Terminal Agent",
+        logoKey: "chatgpt",
+        focusX: 22,
+        focusY: 34,
+        size: "md",
+        description:
+          "A terminal-native coding agent built for repository navigation, edits, reviews, and local engineering tasks.",
+        goodFor: "Best when you want AI working inside an actual repo workflow.",
+        href: "https://github.com/openai/codex",
+      },
+      {
+        id: "cursor",
+        name: "Cursor",
+        type: "AI IDE",
+        logoKey: "cursor",
+        focusX: 76,
+        focusY: 34,
+        size: "md",
+        description:
+          "An AI-first code editor for file-aware Q&A, generation, refactors, and rapid iterative development.",
+        goodFor: "Strong for editor-centric coding and high-velocity iteration.",
+        href: "https://www.cursor.com/",
+      },
+      {
+        id: "gemini-cli",
+        name: "Gemini CLI",
+        type: "CLI",
+        logoKey: "googleGeminiCli",
+        focusX: 36,
+        focusY: 72,
+        size: "sm",
+        description:
+          "Google's open-source command-line agent for code, research-grounded tasks, and developer automation.",
+        goodFor: "Useful for comparing different terminal-agent workflows.",
+        href: "https://github.com/google-gemini/gemini-cli",
+      },
+      {
+        id: "local-assistants",
+        name: "Local Assistants",
+        type: "Workflow",
+        logoKey: "localAssistant",
+        focusX: 70,
+        focusY: 70,
+        size: "sm",
+        description:
+          "A concept node covering self-hosted or laptop-run coding assistants powered by local models.",
+        goodFor: "Relevant when data control or offline workflows matter more than convenience.",
+        href: "https://ollama.com/",
+      },
+    ],
+  },
+  {
+    id: "research",
+    title: "Research Tools",
+    subtitle: "Grounded information systems",
+    accent: "#9fd0ff",
+    accentSoft: "rgba(159, 208, 255, 0.2)",
+    description:
+      "Tools that collect, synthesize, and reason over sources, documents, and research threads.",
+    why:
+      "This sector matters when citations, source grounding, or study-oriented workflows matter more than raw chat speed.",
+    universeX: 81,
+    universeY: 67,
+    focusTitle: "Research Galaxy",
+    focusCopy:
+      "This region is about source-aware AI: research engines, notebook-style synthesis, and verification-minded workflows.",
+    planets: [
+      {
+        id: "perplexity",
+        name: "Perplexity",
+        type: "Research Engine",
+        logoKey: "perplexity",
+        focusX: 22,
+        focusY: 42,
+        size: "md",
+        description:
+          "A source-linked answer engine that blends AI responses with citations and follow-up exploration.",
+        goodFor: "Fast research with visible sources and quick drilldown.",
+        href: "https://www.perplexity.ai/",
+      },
+      {
+        id: "notebooklm",
+        name: "NotebookLM",
+        type: "Notebook",
+        logoKey: "notebooklm",
+        focusX: 72,
+        focusY: 36,
+        size: "md",
+        description:
+          "A notebook-style assistant for working from uploaded material and source-bounded study sets.",
+        goodFor: "Useful for reading packs, notes, and source-specific study sessions.",
+        href: "https://notebooklm.google.com/",
+      },
+      {
+        id: "research-workflows",
+        name: "Research Workflows",
+        type: "Concept",
+        logoKey: "researchFlow",
+        focusX: 52,
+        focusY: 72,
+        size: "sm",
+        description:
+          "A concept node covering search, synthesis, verification, and turning findings into briefable outputs.",
+        goodFor: "Represents the workflow stack rather than one single product.",
+        href: "https://www.perplexity.ai/",
+      },
+    ],
+  },
+  {
+    id: "media",
+    title: "Image / Media AI",
+    subtitle: "Visual and multimodal systems",
+    accent: "#9f94ff",
+    accentSoft: "rgba(159, 148, 255, 0.2)",
+    description:
+      "Image generation, multimodal reasoning, and media-oriented AI workflows for creative or presentation tasks.",
+    why:
+      "This region helps students see that modern AI is not only about text; visual and multimodal systems are part of the same landscape.",
+    universeX: 61,
+    universeY: 80,
+    focusTitle: "Image and Media Galaxy",
+    focusCopy:
+      "This sector brings visual ideation, multimodal work, and concept-generation tools into one cinematic region.",
+    planets: [
+      {
+        id: "chatgpt-image",
+        name: "ChatGPT Image",
+        type: "Generation",
+        logoKey: "chatgpt",
+        focusX: 24,
+        focusY: 40,
+        size: "md",
+        description:
+          "Use prompts to create concept art, explainers, visual mockups, and presentation assets.",
+        goodFor: "Fast visual ideation without leaving the main assistant workflow.",
+        href: "https://openai.com/chatgpt/overview/",
+      },
+      {
+        id: "gemini-multimodal",
+        name: "Gemini Multimodal",
+        type: "Multimodal",
+        logoKey: "gemini",
+        focusX: 74,
+        focusY: 34,
+        size: "md",
+        description:
+          "A multimodal environment for working across text, images, and media-aware tasks.",
+        goodFor: "Useful when one workflow needs both language and visual reasoning.",
+        href: "https://gemini.google.com/",
+      },
+      {
+        id: "media-workflows",
+        name: "Media Workflows",
+        type: "Concept",
+        logoKey: "mediaFlow",
+        focusX: 50,
+        focusY: 72,
+        size: "sm",
+        description:
+          "A concept node for storyboarding, briefing, visual planning, and multimodal presentation design.",
+        goodFor: "Represents creative workflow design rather than one fixed product.",
+        href: "https://www.perplexity.ai/",
+      },
+    ],
+  },
+  {
+    id: "local",
+    title: "Local / Open Source AI",
+    subtitle: "Self-hosted model infrastructure",
+    accent: "#72ffe5",
+    accentSoft: "rgba(114, 255, 229, 0.2)",
+    description:
+      "The self-hosted model ecosystem for students who want to run models locally and understand the open stack.",
+    why:
+      "This sector is where AI becomes tangible infrastructure: runtimes, interfaces, quantized models, and local control.",
+    universeX: 21,
+    universeY: 73,
+    focusTitle: "Local and Open Source Galaxy",
+    focusCopy:
+      "This region is about running the stack yourself: local inference, interfaces, and open-source control planes.",
+    planets: [
+      {
+        id: "ollama",
+        name: "Ollama",
+        type: "Runtime",
+        logoKey: "ollama",
+        focusX: 20,
+        focusY: 38,
+        size: "md",
+        description:
+          "A simple local-model runtime that makes downloading and running models much easier on personal systems.",
+        goodFor: "Fastest on-ramp for local model experimentation.",
+        href: "https://ollama.com/",
+      },
+      {
+        id: "llama-cpp",
+        name: "llama.cpp",
+        type: "Inference",
+        logoKey: "ggml",
+        focusX: 74,
+        focusY: 34,
+        size: "md",
+        description:
+          "A lightweight and portable inference project for quantized models on consumer hardware.",
+        goodFor: "Important when performance, portability, and lower-level control matter.",
+        href: "https://github.com/ggml-org/llama.cpp",
+      },
+      {
+        id: "open-webui",
+        name: "Open WebUI",
+        type: "Interface",
+        logoKey: "openwebui",
+        focusX: 34,
+        focusY: 74,
+        size: "sm",
+        description:
+          "A self-hosted chat interface that sits on top of local runtimes and model-serving backends.",
+        goodFor: "Useful when you want a clean front-end over local AI infrastructure.",
+        href: "https://openwebui.com/",
+      },
+      {
+        id: "model-stacks",
+        name: "Model Stacks",
+        type: "Concept",
+        logoKey: "localAssistant",
+        focusX: 72,
+        focusY: 72,
+        size: "sm",
+        description:
+          "A concept node for combining runtimes, interfaces, quantized models, and hardware-specific workflows.",
+        goodFor: "Represents architecture and stack design rather than one single tool.",
+        href: "https://ollama.com/",
+      },
+    ],
+  },
+  {
+    id: "learning",
+    title: "AI Learning",
+    subtitle: "Core operating knowledge",
+    accent: "#ffd97f",
+    accentSoft: "rgba(255, 217, 127, 0.22)",
+    description:
+      "Prompting, responsible use, model selection, and fundamentals that improve judgment across every other sector.",
+    why:
+      "This is the doctrinal layer of the map: the knowledge that makes every other AI tool more useful.",
+    universeX: 46,
+    universeY: 17,
+    focusTitle: "AI Learning and Fundamentals Galaxy",
+    focusCopy:
+      "This sector is about using AI with more skill and judgment: better prompts, clearer model choice, and stronger validation habits.",
+    planets: [
+      {
+        id: "prompting",
+        name: "Prompting",
+        type: "Practice",
+        logoKey: "prompting",
+        focusX: 24,
+        focusY: 34,
+        size: "sm",
+        description:
+          "Prompt design shapes quality, specificity, and reliability more than most beginners expect.",
+        goodFor: "High-return skill for nearly every AI workflow.",
+        href: "https://platform.openai.com/docs/guides/prompt-engineering",
+      },
+      {
+        id: "model-selection",
+        name: "Model Selection",
+        type: "Practice",
+        logoKey: "models",
+        focusX: 74,
+        focusY: 35,
+        size: "sm",
+        description:
+          "Different models excel at different jobs: code, speed, multimodal work, cost efficiency, or long context.",
+        goodFor: "Prevents defaulting to one tool for every mission.",
+        href: "https://platform.openai.com/docs/models",
+      },
+      {
+        id: "responsible-use",
+        name: "Responsible Use",
+        type: "Practice",
+        logoKey: "responsible",
+        focusX: 30,
+        focusY: 72,
+        size: "sm",
+        description:
+          "Understanding risk, trust, and validation helps students use AI effectively without over-trusting it.",
+        goodFor: "Critical for sound judgment and operational discipline.",
+        href: "https://www.nist.gov/itl/ai-risk-management-framework/nist-ai-rmf-playbook",
+      },
+      {
+        id: "best-practices",
+        name: "Best Practices",
+        type: "Practice",
+        logoKey: "bestPractices",
+        focusX: 70,
+        focusY: 72,
+        size: "sm",
+        description:
+          "Operational habits like source checks, task-tool matching, and iteration discipline make AI use more reliable.",
+        goodFor: "Turns experimentation into repeatable workflow competence.",
+        href: "https://www.nist.gov/itl/ai-risk-management-framework/nist-ai-rmf-playbook",
+      },
+    ],
+  },
+];
