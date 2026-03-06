@@ -109,12 +109,19 @@ The main stylesheet includes responsive breakpoints at roughly:
 - `760px`
 - `520px`
 
-On smaller screens:
+The current mobile implementation is not just a shrunken desktop layout. At `760px` and below, the homepage now uses a mobile-specific adaptation:
 
-- galaxy nodes shift into a grid layout in universe view
-- focus-scene content reflows vertically
-- planet nodes shift into a grid layout
-- brief/detail panels move to the bottom sheet region
+- intro overlay uses tighter typography, safe-area-aware padding, and full-width touch targets
+- universe view becomes a guided composition:
+  - command core stays prominent
+  - galaxy destinations shift into a horizontal card rail
+  - only one galaxy's metadata is surfaced in the dedicated focus card at a time
+- galaxy drilldown becomes a vertical flow:
+  - hero card for the selected galaxy
+  - stacked tool cards instead of freeform absolute node placement
+- tool details open in a mobile bottom sheet / fixed panel with its own close affordance
+
+Desktop and tablet widths still keep the richer spatial map/drilldown composition.
 
 ## Known Fragile / Important Areas
 

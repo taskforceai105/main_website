@@ -1,4 +1,11 @@
-import { renderDetailPanel, renderFocusScene, renderFooter, renderHeader, renderScene } from "./components.js";
+import {
+  renderDetailPanel,
+  renderFocusScene,
+  renderFooter,
+  renderHeader,
+  renderScene,
+  renderUniverseFocusPanel,
+} from "./components.js";
 import { galaxyClusters, universeContent } from "./data/universe.js";
 
 const prefersReducedMotion =
@@ -6,12 +13,16 @@ const prefersReducedMotion =
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const transitionDuration = prefersReducedMotion ? 0 : 1000;
+const mobileViewportQuery =
+  typeof window !== "undefined" ? window.matchMedia("(max-width: 760px)") : null;
 
 const galaxyMap = new Map(galaxyClusters.map((galaxy) => [galaxy.id, galaxy]));
+const defaultGalaxyId = galaxyClusters[0]?.id ?? null;
 
 const appState = {
   phase: "intro",
   selectedGalaxyId: null,
+  focusedGalaxyId: defaultGalaxyId,
   selectedPlanetId: null,
   universeBriefOpen: false,
   transitionLock: false,
@@ -20,9 +31,14 @@ const appState = {
 let rootElement;
 let detailPanel;
 let focusLayer;
+let universeFocusPanel;
 let transitionTimer;
 
+const isMobileViewport = () => Boolean(mobileViewportQuery?.matches);
+
 const getGalaxy = () => (appState.selectedGalaxyId ? galaxyMap.get(appState.selectedGalaxyId) ?? null : null);
+const getFocusedGalaxy = () =>
+  appState.focusedGalaxyId ? galaxyMap.get(appState.focusedGalaxyId) ?? galaxyClusters[0] ?? null : null;
 
 const getPlanet = () => {
   const galaxy = getGalaxy();
@@ -93,7 +109,9 @@ const updateHeader = () => {
 const updateUniverseLayer = () => {
   document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
     const isSelected = button.dataset.galaxyId === appState.selectedGalaxyId;
+    const isFocused = button.dataset.galaxyId === appState.focusedGalaxyId && appState.phase === "universe";
     button.classList.toggle("is-selected", isSelected);
+    button.classList.toggle("is-focused", isFocused);
   });
 };
 
@@ -103,7 +121,34 @@ const updateUniverseBrief = () => {
     return;
   }
 
-  brief.hidden = !(appState.phase === "universe" && appState.universeBriefOpen);
+  brief.hidden = !(appState.phase === "universe" && appState.universeBriefOpen && !isMobileViewport());
+};
+
+const updateUniverseFocusPanel = () => {
+  if (!universeFocusPanel) {
+    return;
+  }
+
+  if (appState.phase !== "universe") {
+    universeFocusPanel.hidden = true;
+    universeFocusPanel.innerHTML = "";
+    return;
+  }
+
+  const galaxy = getFocusedGalaxy();
+  if (!galaxy) {
+    universeFocusPanel.hidden = true;
+    universeFocusPanel.innerHTML = "";
+    return;
+  }
+
+  universeFocusPanel.hidden = false;
+  universeFocusPanel.innerHTML = renderUniverseFocusPanel(galaxy);
+  universeFocusPanel.style.setProperty("--panel-accent", galaxy.accent);
+
+  universeFocusPanel.querySelector("[data-enter-focused-galaxy]")?.addEventListener("click", () => {
+    enterGalaxy(galaxy.id);
+  });
 };
 
 const bindFocusSceneEvents = () => {
@@ -112,6 +157,7 @@ const bindFocusSceneEvents = () => {
       return;
     }
 
+    const returnGalaxyId = appState.selectedGalaxyId;
     rootElement.classList.add("is-returning");
     appState.selectedPlanetId = null;
     withTransitionLock(() => {
@@ -119,6 +165,7 @@ const bindFocusSceneEvents = () => {
       updateDetailPanel();
       window.setTimeout(() => {
         appState.phase = "universe";
+        appState.focusedGalaxyId = returnGalaxyId ?? appState.focusedGalaxyId;
         appState.selectedGalaxyId = null;
         appState.universeBriefOpen = false;
         setFocusVars(null);
@@ -201,9 +248,11 @@ const updateScene = () => {
   }
 
   rootElement.dataset.phase = appState.phase;
+  rootElement.dataset.viewport = isMobileViewport() ? "mobile" : "desktop";
   updateHeader();
   updateUniverseLayer();
   updateUniverseBrief();
+  updateUniverseFocusPanel();
   updateFocusScene();
   updateDetailPanel();
 };
@@ -215,6 +264,7 @@ const enterUniverse = () => {
 
   appState.phase = "universe";
   appState.universeBriefOpen = false;
+  appState.focusedGalaxyId = appState.focusedGalaxyId ?? defaultGalaxyId;
   rootElement.classList.add("is-unveiling");
   updateScene();
   withTransitionLock(() => {}, transitionDuration);
@@ -228,6 +278,7 @@ const enterGalaxy = (galaxyId) => {
   const galaxy = galaxyMap.get(galaxyId);
   appState.phase = "galaxy";
   appState.selectedGalaxyId = galaxyId;
+  appState.focusedGalaxyId = galaxyId;
   appState.selectedPlanetId = null;
   appState.universeBriefOpen = false;
   setFocusVars(galaxy);
@@ -238,7 +289,18 @@ const enterGalaxy = (galaxyId) => {
 
 const setupInteractions = () => {
   document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
-    button.addEventListener("click", () => enterGalaxy(button.dataset.galaxyId));
+    button.addEventListener("click", () => {
+      const galaxyId = button.dataset.galaxyId;
+
+      if (appState.phase === "universe" && isMobileViewport()) {
+        appState.focusedGalaxyId = galaxyId;
+        updateUniverseLayer();
+        updateUniverseFocusPanel();
+        return;
+      }
+
+      enterGalaxy(galaxyId);
+    });
   });
 
   document.querySelector("[data-enter-universe]")?.addEventListener("click", enterUniverse);
@@ -250,7 +312,7 @@ const setupInteractions = () => {
   });
 
   document.querySelector("[data-open-brief]")?.addEventListener("click", () => {
-    if (appState.phase !== "universe") {
+    if (appState.phase !== "universe" || isMobileViewport()) {
       return;
     }
 
@@ -321,12 +383,16 @@ const applyDebugStateFromUrl = () => {
 
   if (phase === "universe") {
     appState.phase = "universe";
+    if (galaxyMap.has(galaxy)) {
+      appState.focusedGalaxyId = galaxy;
+    }
     appState.universeBriefOpen = params.get("brief") === "open";
   }
 
   if (phase === "galaxy" && galaxyMap.has(galaxy)) {
     appState.phase = "galaxy";
     appState.selectedGalaxyId = galaxy;
+    appState.focusedGalaxyId = galaxy;
     appState.universeBriefOpen = false;
     setFocusVars(galaxyMap.get(galaxy));
     if (planet) {
@@ -352,12 +418,26 @@ export const boot = (root = document.getElementById("app")) => {
   rootElement = root.querySelector(".app-shell");
   detailPanel = root.querySelector("[data-detail-panel]");
   focusLayer = root.querySelector("[data-focus-layer]");
+  universeFocusPanel = root.querySelector("[data-universe-focus]");
 
   setFocusVars(null);
   applyDebugStateFromUrl();
   updateScene();
   setupInteractions();
   setupParallax();
+
+  if (mobileViewportQuery) {
+    const handleViewportChange = () => {
+      if (isMobileViewport()) {
+        appState.universeBriefOpen = false;
+      }
+
+      appState.focusedGalaxyId = appState.focusedGalaxyId ?? defaultGalaxyId;
+      updateScene();
+    };
+
+    mobileViewportQuery.addEventListener("change", handleViewportChange);
+  }
 };
 
 if (typeof document !== "undefined") {

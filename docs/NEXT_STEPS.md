@@ -1,5 +1,8 @@
 # Next Steps
 
+Note:
+The current codebase now has a mobile-specific responsive pass. Future sessions should verify/polish it on real devices rather than assuming mobile is still in its old broken state.
+
 ## Must-Haves
 
 ### 1. Reduce universe-level clutter
@@ -116,7 +119,7 @@ Regression warnings:
 ## Nice-To-Haves
 
 - Add a more dramatic galaxy-selection visual accent without increasing clutter.
-- Improve mobile composition for the universe and galaxy scenes.
+- Polish the new mobile galaxy rail/focus-card and bottom-sheet behaviors after real-device review.
 - Audit whether unused legacy assets/files in `docs/` should be cleaned up in a future focused pass.
 - Add a clearer content-editing note for non-code maintainers if the structured data grows.
 

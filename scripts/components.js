@@ -39,6 +39,14 @@ const renderLogoMark = (logoKey, label) => {
   return `<span class="mark-badge__mono">${escapeHtml(logo.text)}</span>`;
 };
 
+const renderIntroTitle = (title) => {
+  if (title === "DET 105 AI TASK FORCE") {
+    return "<span>DET 105</span><span>AI TASK FORCE</span>";
+  }
+
+  return `<span>${escapeHtml(title)}</span>`;
+};
+
 const renderGalaxyNode = (galaxy) => `
   <button
     class="galaxy-node"
@@ -58,6 +66,23 @@ const renderGalaxyNode = (galaxy) => `
       <span>${escapeHtml(galaxy.subtitle)}</span>
     </span>
   </button>
+`;
+
+export const renderUniverseFocusPanel = (galaxy) => `
+  <div class="universe-focus-card__header">
+    <div>
+      <span class="panel-kicker">Galaxy Focus</span>
+      <h3>${escapeHtml(galaxy.title)}</h3>
+    </div>
+    <span class="universe-focus-card__badge">${escapeHtml(`${galaxy.planets.length} nodes`)}</span>
+  </div>
+  <p class="universe-focus-card__subtitle">${escapeHtml(galaxy.subtitle)}</p>
+  <p class="universe-focus-card__copy">${escapeHtml(galaxy.why)}</p>
+  <div class="universe-focus-card__actions">
+    <button class="scene-button" type="button" data-enter-focused-galaxy>
+      ${escapeHtml(`Enter ${galaxy.title}`)}
+    </button>
+  </div>
 `;
 
 const renderPlanetNode = (planet, accent) => `
@@ -103,7 +128,7 @@ export const renderIntroOverlay = (content) => `
     <div class="intro-overlay__backdrop"></div>
     <div class="intro-overlay__panel">
       <span class="intro-overlay__eyebrow">Command Cosmos</span>
-      <h2 class="intro-overlay__title">${escapeHtml(content.title)}</h2>
+      <h2 class="intro-overlay__title">${renderIntroTitle(content.title)}</h2>
       <p class="intro-overlay__subtitle">${escapeHtml(content.subtitle)}</p>
       <p class="intro-overlay__copy">${escapeHtml(content.teaser)}</p>
       <p class="intro-overlay__detail">${escapeHtml(content.introPrompt)}</p>
@@ -165,6 +190,8 @@ export const renderScene = (content, galaxies) => `
         ${galaxies.map(renderGalaxyNode).join("")}
       </div>
 
+      <aside class="universe-focus-card" data-universe-focus hidden></aside>
+
       <div class="focus-layer" data-focus-layer aria-live="polite"></div>
 
       ${renderUniverseBrief(content)}
@@ -205,6 +232,10 @@ export const renderFocusScene = (galaxy) => `
       </div>
 
       <div class="focus-planets">
+        <div class="focus-planets__header">
+          <span class="panel-kicker">Tool Orbit</span>
+          <p>Tap a tool node to open its briefing.</p>
+        </div>
         ${galaxy.planets.map((planet) => renderPlanetNode(planet, galaxy.accent)).join("")}
       </div>
     </div>
@@ -220,6 +251,7 @@ export const renderDetailPanel = ({ galaxy, planet }) => {
   const href = isPlanet ? planet.href : null;
 
   return `
+    <span class="detail-panel__handle" aria-hidden="true"></span>
     <button class="panel-close" type="button" data-close-detail aria-label="Close detail panel">
       Close
     </button>
