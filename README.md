@@ -1,6 +1,6 @@
 # Det 105 AI Task Force
 
-A polished static landing page for the Det 105 AI Task Force website. The site is designed for Netlify deployment and keeps the homepage intentionally focused: a premium hero, animated command-center styling, and a curated AI tool explorer for students.
+An immersive static homepage for the Det 105 AI Task Force website. The current version is an AI universe / galaxy map experience built for Netlify deployment: a central command core, topic-sector galaxies, clickable planetary nodes, and a focused detail panel for exploration.
 
 ## Local preview
 
@@ -14,9 +14,9 @@ Then open `http://localhost:4173`.
 
 ## Edit content
 
-- Update tool categories, links, and card copy in `scripts/site-data.js`.
-- Swap placeholder orbit badges in `assets/logos/`.
-- Replace or refresh the main emblem image in `assets/AI_TaskForce.png` if needed.
+- Update universe sectors, node positions, links, and copy in `scripts/site-data.js`.
+- Replace the command-core identity image in `assets/det105.png` if needed.
+- Fine-tune visual layout and motion in `styles.css`.
 
 ## Netlify
 

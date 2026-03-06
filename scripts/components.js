@@ -1,246 +1,212 @@
 const escapeHtml = (value) =>
-  value
+  String(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-export const renderNavbar = (categories) => `
-  <header class="site-header">
-    <div class="site-header__inner">
-      <a class="brand-mark" href="#hero" aria-label="Det 105 AI Task Force home">
-        <span class="brand-mark__crest">
-          <img src="assets/AI_TaskForce.png" alt="" />
-        </span>
-        <span class="brand-mark__title">
-          <strong>DET 105 AI TASK FORCE</strong>
-          <span>Student AI Exploration Hub</span>
-        </span>
-      </a>
+const seeded = (index, salt) => {
+  const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+  return value - Math.floor(value);
+};
 
-      <nav class="top-nav" aria-label="Primary">
-        <div class="nav-links">
-          <a class="nav-link nav-link--primary" href="#hero">Overview</a>
-          <a class="nav-link" href="#tool-explorer">Tool Explorer</a>
-          <div class="menu-wrap" data-menu-wrap>
-            <button
-              class="menu-toggle"
-              type="button"
-              aria-expanded="false"
-              aria-controls="mega-menu"
-              data-menu-toggle
-            >
-              Tool Categories
-            </button>
-            ${renderMegaMenu(categories)}
-          </div>
+const renderStarLayer = (count, layer) => `
+  <div class="star-layer star-layer--${layer}" aria-hidden="true">
+    ${Array.from({ length: count }, (_, index) => {
+      const x = Math.round(seeded(index, layer.length + 1) * 1000) / 10;
+      const y = Math.round(seeded(index, layer.length + 2) * 1000) / 10;
+      const size = 1 + seeded(index, layer.length + 3) * 2.8;
+      const alpha = 0.35 + seeded(index, layer.length + 4) * 0.65;
+      const delay = seeded(index, layer.length + 5) * 6;
+      return `
+        <span
+          class="star"
+          style="--x:${x}%; --y:${y}%; --size:${size}px; --alpha:${alpha}; --delay:${delay}s;"
+        ></span>
+      `;
+    }).join("")}
+  </div>
+`;
+
+const renderPlanet = (planet) => {
+  const dx = planet.x - 50;
+  const dy = planet.y - 50;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  return `
+    <button
+      class="planet-node planet-node--${planet.size}"
+      type="button"
+      style="--planet-x:${planet.x}%; --planet-y:${planet.y}%; --trace-angle:${angle}deg; --trace-length:${distance}%;"
+      data-planet-button
+      data-planet-id="${planet.id}"
+    >
+      <span class="planet-node__trace" aria-hidden="true"></span>
+      <span class="planet-node__body"></span>
+      <span class="planet-node__label">
+        <strong>${escapeHtml(planet.name)}</strong>
+        <span>${escapeHtml(planet.type)}</span>
+      </span>
+    </button>
+  `;
+};
+
+const renderGalaxy = (galaxy, index) => `
+  <article
+    class="galaxy-cluster${index === 0 ? " is-active" : ""}"
+    style="--cluster-x:${galaxy.x}%; --cluster-y:${galaxy.y}%; --cluster-size:${galaxy.size}px; --cluster-accent:${galaxy.accent}; --cluster-accent-soft:${galaxy.accentSoft};"
+    data-galaxy
+    data-galaxy-id="${galaxy.id}"
+  >
+    <button class="galaxy-cluster__core" type="button" data-galaxy-button data-galaxy-id="${galaxy.id}">
+      <span class="galaxy-cluster__aura" aria-hidden="true"></span>
+      <span class="galaxy-cluster__pulse" aria-hidden="true"></span>
+      <span class="galaxy-cluster__halo" aria-hidden="true"></span>
+      <span class="galaxy-cluster__label">
+        <strong>${escapeHtml(galaxy.title)}</strong>
+        <span>${escapeHtml(galaxy.subtitle)}</span>
+      </span>
+    </button>
+    <div class="galaxy-cluster__system">
+      ${galaxy.planets.map(renderPlanet).join("")}
+    </div>
+  </article>
+`;
+
+const renderLegend = (galaxies) => `
+  <div class="universe-legend" data-reveal>
+    ${galaxies
+      .map(
+        (galaxy, index) => `
+          <button
+            class="legend-chip${index === 0 ? " is-active" : ""}"
+            type="button"
+            data-legend-button
+            data-galaxy-id="${galaxy.id}"
+          >
+            <span class="legend-chip__swatch" style="--swatch:${galaxy.accent};"></span>
+            <span class="legend-chip__title">${escapeHtml(galaxy.title)}</span>
+            <span class="legend-chip__count">${galaxy.planets.length} nodes</span>
+          </button>
+        `,
+      )
+      .join("")}
+  </div>
+`;
+
+export const renderHeader = (content) => `
+  <header class="minimal-header" data-reveal>
+    <div class="minimal-header__inner">
+      <div class="minimal-header__brand">
+        <span class="minimal-header__crest">
+          <img src="assets/det105.png" alt="" />
+        </span>
+        <div>
+          <p class="minimal-header__eyebrow">${escapeHtml(content.heading)}</p>
+          <h1 class="minimal-header__title">
+            ${escapeHtml(content.title)}
+            <span>${escapeHtml(content.subtitle)}</span>
+          </h1>
         </div>
-        <a class="cta-link" href="#tool-explorer">Explore Tools</a>
-      </nav>
+      </div>
+      <p class="minimal-header__copy">${escapeHtml(content.supportingLine)}</p>
     </div>
   </header>
 `;
 
-export const renderMegaMenu = (categories) => `
-  <section class="mega-menu" id="mega-menu" aria-label="Tool categories">
-    <div class="mega-menu__header">
-      <div>
-        <span class="mega-menu__eyebrow">Tactical Access Grid</span>
-        <h2 class="mega-menu__title">Launch into the AI ecosystem without the clutter.</h2>
-        <p class="mega-menu__copy">
-          The homepage stays intentionally focused. This menu surfaces the current categories and a few
-          fast-entry links, while the explorer below provides the full card view.
-        </p>
+export const renderUniverseScene = (content, galaxies) => `
+  <main class="universe-page">
+    <section class="universe-intro section-shell" data-reveal>
+      <div class="universe-intro__copy">
+        <span class="universe-intro__eyebrow">Explorable Knowledge Map</span>
+        <h2>Explore the AI universe.</h2>
+        <p>${escapeHtml(content.missionLine)}</p>
       </div>
-      <span class="mega-menu__hint">Hover, click, or tap to explore</span>
-    </div>
+      <div class="universe-intro__actions">
+        <a class="universe-button" href="#universe-map">Enter Map</a>
+        <button class="universe-button universe-button--ghost" type="button" data-focus-core>
+          Focus Command Core
+        </button>
+      </div>
+    </section>
 
-    <div class="mega-menu__grid">
-      ${categories
+    <section class="universe-wrap" id="universe-map" data-universe-wrapper>
+      <div class="universe-sticky">
+        <div class="universe-scene" data-universe-scene>
+          ${renderStarLayer(130, "deep")}
+          ${renderStarLayer(90, "mid")}
+          ${renderStarLayer(65, "near")}
+          <div class="nebula nebula--north" aria-hidden="true"></div>
+          <div class="nebula nebula--east" aria-hidden="true"></div>
+          <div class="nebula nebula--south" aria-hidden="true"></div>
+          <div class="cosmic-grid" aria-hidden="true"></div>
+          <div class="light-column light-column--left" aria-hidden="true"></div>
+          <div class="light-column light-column--right" aria-hidden="true"></div>
+
+          <div class="command-core" data-command-core>
+            <div class="command-core__rings" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="command-core__shell">
+              <div class="command-core__logo-wrap">
+                <img src="assets/det105.png" alt="Det 105 AI Task Force logo" class="command-core__logo" />
+              </div>
+            </div>
+            <div class="command-core__text">
+              <p>Det 105 Command Core</p>
+              <strong>Central AI Universe Hub</strong>
+              <span>Anchor node for student exploration across the surrounding AI sectors.</span>
+            </div>
+          </div>
+
+          <div class="cluster-field" data-cluster-field>
+            ${galaxies.map(renderGalaxy).join("")}
+          </div>
+
+          ${renderLegend(galaxies)}
+
+          <aside class="info-panel" data-info-panel data-state="galaxy" aria-live="polite">
+            <button class="info-panel__close" type="button" data-panel-close aria-label="Close detail panel">
+              Close
+            </button>
+            <div class="info-panel__eyebrow" data-panel-meta>Galaxy focus</div>
+            <h3 class="info-panel__title" data-panel-title></h3>
+            <p class="info-panel__subtitle" data-panel-subtitle></p>
+            <p class="info-panel__description" data-panel-description></p>
+            <div class="info-panel__callout">
+              <span>Why it matters</span>
+              <p data-panel-goodfor></p>
+            </div>
+            <div class="info-panel__actions">
+              <a class="info-panel__link" data-panel-link target="_blank" rel="noreferrer">
+                Open official link
+              </a>
+              <button class="info-panel__secondary" type="button" data-panel-back>
+                Back to sector
+              </button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="command-deck section-shell">
+      ${content.commandDeck
         .map(
-          (category) => `
-            <article class="menu-column">
-              <h3 class="menu-column__title">${escapeHtml(category.title)}</h3>
-              <p class="menu-column__description">${escapeHtml(category.description)}</p>
-              <ul class="menu-column__list">
-                ${category.tools
-                  .slice(0, 3)
-                  .map(
-                    (tool) => `
-                      <li>
-                        <a href="${tool.href}" target="_blank" rel="noreferrer">
-                          <span>${escapeHtml(tool.name)}</span>
-                        </a>
-                      </li>
-                    `,
-                  )
-                  .join("")}
-              </ul>
+          (item) => `
+            <article class="command-card" data-reveal>
+              <span class="command-card__label">${escapeHtml(item.label)}</span>
+              <strong>${escapeHtml(item.value)}</strong>
+              <p>${escapeHtml(item.text)}</p>
             </article>
           `,
         )
         .join("")}
-    </div>
-  </section>
-`;
-
-export const renderHero = (content, orbitingLogos) => `
-  <section class="hero-section section-shell" id="hero" data-reveal>
-    <div class="hero-layout">
-      <div class="hero-copy">
-        <span class="eyebrow">${escapeHtml(content.eyebrow)}</span>
-        <h1 class="hero-title">
-          ${escapeHtml(content.title)}
-          <span>Curated. Technical. Mission-ready.</span>
-        </h1>
-        <p class="hero-subtitle">${escapeHtml(content.subtitle)}</p>
-        <p class="hero-supporting">${escapeHtml(content.supportingLine)}</p>
-        <div class="hero-actions">
-          <a class="hero-button" href="#tool-explorer">Explore Tools</a>
-          <a class="hero-button hero-button--ghost" href="#mission-brief">View Mission Brief</a>
-        </div>
-      </div>
-
-      <div class="hero-visual-area">
-        <div class="hero-visual-shell" data-parallax-shell>
-          <span class="hero-beacon hero-beacon--a"></span>
-          <span class="hero-beacon hero-beacon--b"></span>
-          <span class="orbital-grid" aria-hidden="true"></span>
-          <div class="coin-stage" aria-label="Animated Det 105 AI Task Force emblem">
-            <span class="ring ring--outer" aria-hidden="true"></span>
-            <span class="ring ring--middle" aria-hidden="true"></span>
-            <span class="ring ring--inner" aria-hidden="true"></span>
-
-            <div class="orbit" aria-label="Orbiting AI ecosystem logos">
-              ${orbitingLogos
-                .map(
-                  (logo) => `
-                    <div class="orbit-item" style="--angle: ${logo.angle}">
-                      <a
-                        class="orbit-badge"
-                        href="${logo.href}"
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="${escapeHtml(logo.name)}"
-                      >
-                        <img src="${logo.asset}" alt="${escapeHtml(logo.name)} badge" />
-                      </a>
-                    </div>
-                  `,
-                )
-                .join("")}
-            </div>
-
-            <div class="energy-nodes" aria-hidden="true">
-              <span class="energy-node"></span>
-              <span class="energy-node"></span>
-              <span class="energy-node"></span>
-            </div>
-
-            <div class="coin-emblem">
-              <div class="coin-face coin-face--front">
-                <img src="assets/AI_TaskForce.png" alt="Det 105 AI Task Force emblem" />
-              </div>
-              <div class="coin-face coin-face--back">
-                <div class="service-rings" aria-hidden="true"></div>
-                <div class="coin-back-core">
-                  <div class="service-badges">
-                    <span class="service-pill">USAF</span>
-                    <span class="service-pill">USSF</span>
-                  </div>
-                  <strong>Joint Air &amp; Space AI Focus</strong>
-                  <span>
-                    A premium back-face treatment inspired by service heritage, aerospace precision, and
-                    modern AI operations.
-                  </span>
-                </div>
-              </div>
-              <div class="coin-edge" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-signals" id="mission-brief">
-        ${content.signals
-          .map(
-            (signal) => `
-              <article class="signal-card">
-                <p class="signal-card__label">${escapeHtml(signal.label)}</p>
-                <p class="signal-card__text">${escapeHtml(signal.text)}</p>
-              </article>
-            `,
-          )
-          .join("")}
-      </div>
-    </div>
-  </section>
-`;
-
-export const renderToolCards = (category) =>
-  category.tools
-    .map(
-      (tool) => `
-        <article class="tool-card" data-reveal>
-          <span class="tool-card__tag">${escapeHtml(tool.tag)}</span>
-          <h4 class="tool-card__title">${escapeHtml(tool.name)}</h4>
-          <p class="tool-card__description">${escapeHtml(tool.description)}</p>
-          <a class="tool-card__link" href="${tool.href}" target="_blank" rel="noreferrer">
-            Open official link
-          </a>
-        </article>
-      `,
-    )
-    .join("");
-
-export const renderToolExplorer = (categories, intro) => `
-  <section class="tools-section section-shell" id="tool-explorer" data-reveal>
-    <div class="tools-shell">
-      <div class="section-heading">
-        <div>
-          <span class="section-kicker">Tool Explorer</span>
-          <h2>Focused categories. Fast decisions.</h2>
-          <p>${escapeHtml(intro)}</p>
-        </div>
-        <div class="section-badge">
-          <strong>${categories.length}</strong>
-          Curated lanes
-        </div>
-      </div>
-
-      <div class="category-tabs" role="tablist" aria-label="AI tool categories">
-        ${categories
-          .map(
-            (category, index) => `
-              <button
-                class="category-tab${index === 0 ? " is-active" : ""}"
-                type="button"
-                role="tab"
-                aria-selected="${index === 0 ? "true" : "false"}"
-                aria-controls="tools-panel"
-                data-category-tab
-                data-category-id="${category.id}"
-              >
-                ${escapeHtml(category.title)}
-              </button>
-            `,
-          )
-          .join("")}
-      </div>
-
-      <div class="tools-panel" id="tools-panel" role="tabpanel" tabindex="0">
-        <div class="tools-panel__heading">
-          <div>
-            <h3 data-panel-title>${escapeHtml(categories[0].title)}</h3>
-            <p data-panel-description>${escapeHtml(categories[0].description)}</p>
-          </div>
-        </div>
-        <div class="tools-grid" data-tools-grid>
-          ${renderToolCards(categories[0])}
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
+  </main>
 `;
 
 export const renderFooter = (content) => `
@@ -251,8 +217,8 @@ export const renderFooter = (content) => `
         <p class="site-footer__copy">${escapeHtml(content.footerDisclaimer)}</p>
       </div>
       <p class="site-footer__meta">
-        <span>Netlify-ready static deployment</span>
-        <span>Data-driven tool registry for future updates</span>
+        <span>Interactive AI galaxy homepage</span>
+        <span>Structured data, static deploy, Netlify-safe</span>
       </p>
     </div>
   </footer>
