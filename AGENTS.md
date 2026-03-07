@@ -2,53 +2,49 @@
 
 ## Repository Purpose
 
-This repo contains the Det 105 AI Task Force website homepage. It is currently a static, Netlify-compatible site that presents an "AI universe" map for students in Det 105 to explore AI sectors, tools, and foundational topics without turning the homepage into a full course or a long text wall.
+This repo contains the Det 105 AI Task Force website homepage. It is a static, Netlify-compatible AI directory for students in Det 105 to explore real AI tools, platforms, and foundational topics without turning the homepage into a full course or a long text wall.
 
 ## Product Vision
 
-- Visual direction: futuristic, dark, cinematic, premium, technical, space-like.
-- Core concept: an AI universe / galaxy exploration interface.
+- Visual direction: dark, modern, premium, restrained, slightly futuristic.
+- Core concept: a polished categorized AI directory rather than a galaxy map or cinematic desktop system.
 - Audience: students exploring AI tools and topics inside the organization.
-- Content model: brief descriptions plus outbound links/resources, not dense lessons.
-- Tone to preserve: polished and elite, not childish, cartoonish, or cluttered.
+- Content model: brief descriptions, category structure, and outbound links/resources.
+- Tone to preserve: clear, technical, polished, not childish, noisy, or experimental.
 
 ## Current UX Model
 
-The repo now supports two automatically selected experiences:
+The live homepage is now one responsive directory system shared across desktop and mobile:
 
-- Desktop / PC: landing intro -> boot/loading cinematic -> connected universe map -> tool detail
-- Mobile: intro -> simplified category explorer -> tool detail
+- Header with Det 105 branding and a browse button
+- Hero section with concise intro copy and summary stats
+- Category overview cards
+- Sticky search/filter toolbar
+- Featured tools section
+- Category sections with tool cards
+- Closable detail drawer / bottom sheet
 
-Preserve the rule that users should not see every layer at once, but do not force the desktop map interaction model onto phones.
-
-Current implementation already follows this split:
-
-- Intro overlay is the initial state for both device contexts.
-- Desktop uses one connected AI universe scene instead of separate live galaxy destination pages.
-- Desktop entry attempts fullscreen and then runs a short boot/loading sequence before the interactive map appears.
-- Desktop nodes live in one bounded 2.5D map with drag and wheel zoom rather than separate drilldown pages.
-- Mobile uses a simplified explorer with category chips and tool cards.
-- Tool details open in a closable panel/sheet in both contexts.
-- Escape closes the deepest open layer first on desktop keyboards.
+Desktop and mobile now share the same information architecture. Desktop gets more space and columns; mobile gets the same content model in a simpler stacked layout. There is no fullscreen launch, no boot sequence, no galaxy drilldown, and no heavy desktop-only map path in the live UI anymore.
 
 ## Design Principles
 
-- Keep the desktop map cleaner than the detail layer.
-- Do not let node labels, overlays, or webbing turn the desktop universe into unreadable soup.
-- Desktop entry and transitions should feel cinematic, but smoothness and browser stability win over heavier effects.
-- On mobile, prefer clarity over preserving the spatial galaxy metaphor.
-- Tool/company nodes should be more interesting than plain spheres when improved, but changes must stay coherent with the current visual system.
+- Keep the site clean, stable, and easy to scan.
+- Use dark premium styling with subtle glow, not heavy effects.
+- Prefer category clarity over spectacle.
+- Preserve concise copy and strong spacing.
+- Keep cards readable and interactive without making the page feel like a dashboard wall.
 - Keep overlays and panels closable. No blocking UI that traps the user.
-- Avoid text-heavy layouts, clutter, cartoon styling, and bright toy-like treatments.
-- Prefer structured content/config data over hard-coded copy in rendering logic.
+- Avoid cartoon styling, clutter, fragile gestures, and experimental scene logic.
+- Prefer structured content/config data over hard-coded copy in render logic.
 
 ## Asset / Logo Rules
 
 - Prefer official remote/public brand assets only when they are reliable enough for production.
 - If a remote logo is fragile, store a local copy under `assets/logos/`.
 - Keep source notes in `assets/logos/SOURCES.md` and `scripts/data/logo-sources.js`.
-- If no clean official asset is practical, use a deliberate monogram fallback rather than a low-quality or misleading mark.
+- If no clean official asset is practical, use a deliberate monogram fallback rather than a broken image or low-quality mark.
 - Reuse the existing local asset structure instead of scattering logos across the repo.
+- Never leave broken logo states in the final UI.
 
 ## Technical Workflow Rules
 
@@ -68,6 +64,7 @@ Current implementation already follows this split:
   - `styles.css`
 - Build on the existing implementation. Do not restart the site from scratch unless a narrowly scoped refactor is clearly justified.
 - Keep content editable through structured data/config files when possible.
+- `scripts/data/universe.js` still contains older map-oriented data exports from previous iterations; the live app now uses the directory-oriented exports near the bottom of that file.
 - Be careful with `docs/`: `docs/index.html` is a legacy GitHub Pages-oriented entry that points back to root assets, while the Netlify deployment publishes the repository root.
 - Do not assume a framework build pipeline exists. This repo currently has no `package.json`, no Node-based bundler, and no formal lint/test setup.
 
@@ -88,21 +85,20 @@ Current implementation already follows this split:
 
 ## What Not To Break
 
-- Automatic device detection between desktop and mobile.
-- The desktop progressive-disclosure flow: intro -> boot -> connected map -> tool detail.
-- The simplified mobile explorer flow.
-- The connected desktop universe map in `scripts/data/universe.js`.
-- Bounded desktop pan/zoom behavior and the fullscreen-first entry flow.
-- The dark cinematic visual language.
-- Closable overlays, modals, and panels.
+- The clean categorized directory structure.
+- Responsive desktop/mobile behavior with the same shared content model.
+- Sticky search/filter toolbar and category navigation.
+- Closable detail drawer / bottom sheet behavior.
 - Structured content data in `scripts/data/universe.js`.
 - Local logo handling and source tracking.
+- The dark polished visual language.
 - Netlify compatibility with root-level static publishing.
 
 Also be aware of current repo-specific pitfalls:
 
 - `docs/styles.css` appears to be a stale legacy file and is not the stylesheet used by the live root homepage.
 - `docs/index.html` exists, but root `index.html` is the primary deployed entry for Netlify.
+- Older map/fullscreen/boot exports still exist in `scripts/data/universe.js` as historical data, but they are no longer the live homepage architecture.
 
 ## Expected Validation Before Completing Work
 
@@ -110,5 +106,6 @@ Also be aware of current repo-specific pitfalls:
 - In the current repo state, there is no formal lint/build pipeline, so at minimum:
   - run `git diff --check`
   - run a lightweight JS import/syntax smoke check on the module files if possible
-  - confirm Netlify assumptions were not broken (root publish, no required build step unless intentionally added)
+  - confirm Netlify assumptions were not broken
+  - if possible, run a browser-level screenshot/preview check against the static site
 - If you cannot run a meaningful browser preview in the sandbox, say so clearly in the handoff/final note.

@@ -1,9 +1,11 @@
 # Det 105 AI Task Force
 
-An immersive static homepage for the Det 105 AI Task Force website. The current version automatically adapts between:
+A clean static homepage for the Det 105 AI Task Force website. The current version is a shared responsive AI directory with:
 
-- a desktop launch flow with landing intro, boot sequence, and connected AI universe map
-- a simplified mobile explorer with category cards and tool detail sheets
+- a branded hero and category overview
+- sticky search/filter navigation
+- categorized tool sections with 50+ real items
+- a responsive detail drawer / bottom sheet
 
 ## Local preview
 
@@ -17,9 +19,9 @@ Then open `http://localhost:4173`.
 
 ## Edit content
 
-- Update galaxy, planet, and copy data in `scripts/data/universe.js`.
+- Update category, tool, and copy data in `scripts/data/universe.js`.
 - Update logo metadata in `scripts/data/logo-sources.js`.
-- Replace the command-core identity image in `assets/det105.png` if needed.
+- Replace the brand crest in `assets/det105.png` if needed.
 - Fine-tune layout and transitions in `styles.css`.
 
 ## Brand assets

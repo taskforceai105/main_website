@@ -7,24 +7,6 @@ const escapeHtml = (value) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-const seeded = (index, salt) => {
-  const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
-  return value - Math.floor(value);
-};
-
-const renderStarLayer = (count, layer) => `
-  <div class="star-layer star-layer--${layer}" aria-hidden="true">
-    ${Array.from({ length: count }, (_, index) => {
-      const x = Math.round(seeded(index, layer.length + 1) * 1000) / 10;
-      const y = Math.round(seeded(index, layer.length + 2) * 1000) / 10;
-      const size = (0.9 + seeded(index, layer.length + 3) * 2.6).toFixed(2);
-      const alpha = (0.28 + seeded(index, layer.length + 4) * 0.72).toFixed(2);
-      const delay = (seeded(index, layer.length + 5) * 6).toFixed(2);
-      return `<span class="star" style="--x:${x}%; --y:${y}%; --size:${size}px; --alpha:${alpha}; --delay:${delay}s;"></span>`;
-    }).join("")}
-  </div>
-`;
-
 const getLogoMeta = (logoKey, label) => {
   const logo = logoCatalog[logoKey];
   const fallbackText = escapeHtml(logo?.text ?? label.slice(0, 2).toUpperCase());
@@ -37,19 +19,20 @@ const getLogoMeta = (logoKey, label) => {
   };
 };
 
-const renderMarkBadge = (logoKey, label, extraClass = "") => {
+export const renderMarkBadge = (logoKey, label, extraClass = "") => {
   const { logo, fallbackText, surface } = getLogoMeta(logoKey, label);
+  const className = `mark-badge mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}`;
 
   if (!logo || logo.type !== "image") {
     return `
-      <span class="mark-badge mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}">
+      <span class="${className}">
         <span class="mark-badge__mono">${fallbackText}</span>
       </span>
     `;
   }
 
   return `
-    <span class="mark-badge mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}">
+    <span class="${className}">
       <img
         src="${logo.src}"
         alt="${escapeHtml(logo.alt)}"
@@ -71,398 +54,302 @@ const renderIntroTitle = (title) => {
   return `<span>${escapeHtml(title)}</span>`;
 };
 
-const buildDesktopConnections = (nodes) => {
-  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
-  const seen = new Set();
-
-  return nodes.flatMap((node) =>
-    (node.relatedNodeIds ?? [])
-      .map((relatedId) => {
-        const related = nodeMap.get(relatedId);
-        if (!related) {
-          return null;
-        }
-
-        const key = [node.id, relatedId].sort().join(":");
-        if (seen.has(key)) {
-          return null;
-        }
-
-        seen.add(key);
-        return {
-          id: key,
-          source: node,
-          target: related,
-          weight: ((node.importance ?? 1) + (related.importance ?? 1)) / 2,
-        };
-      })
-      .filter(Boolean),
-  );
-};
-
-const renderDesktopRegion = (region, selectedNodeId, nodeMap) => {
-  const isActive = selectedNodeId && nodeMap.get(selectedNodeId)?.regionId === region.id;
-
-  return `
-    <section
-      class="desktop-region${isActive ? " is-active" : ""}"
-      style="--region-x:${region.x}px; --region-y:${region.y}px; --region-w:${region.width}px; --region-h:${region.height}px; --region-accent:${region.accent};"
-      aria-hidden="true"
-      data-region-id="${region.id}"
-    >
-      <div class="desktop-region__halo"></div>
-      <div class="desktop-region__label" style="--region-label-x:${region.labelX ?? -220}px; --region-label-y:${region.labelY ?? -120}px;">
-        <span>${escapeHtml(region.subtitle)}</span>
-        <strong>${escapeHtml(region.title)}</strong>
-      </div>
-    </section>
-  `;
-};
-
-const renderDesktopConnection = (connection, selectedNodeId) => {
-  const isActive =
-    selectedNodeId && (selectedNodeId === connection.source.id || selectedNodeId === connection.target.id);
-  const isCrossRegion = connection.source.regionId !== connection.target.regionId;
-
-  return `
-    <line
-      class="desktop-connection${isActive ? " is-active" : ""}${isCrossRegion ? " is-cross-region" : ""}"
-      x1="${connection.source.x}"
-      y1="${connection.source.y}"
-      x2="${connection.target.x}"
-      y2="${connection.target.y}"
-      style="--connection-weight:${connection.weight.toFixed(2)};"
-      data-source-id="${connection.source.id}"
-      data-target-id="${connection.target.id}"
-    />
-  `;
-};
-
-const renderDesktopNode = (node, accent, selectedNodeId, relatedNodeIds) => {
-  const isSelected = node.id === selectedNodeId;
-  const isRelated = !isSelected && selectedNodeId && relatedNodeIds.has(node.id);
-  const scale = Math.max(0.84, Math.min(1.58, node.importance ?? 1));
-  const weightClass =
-    scale >= 1.4 ? "desktop-node--primary" : scale >= 1.12 ? "desktop-node--major" : "desktop-node--support";
-  const orbClass = node.orbStyle ? ` desktop-node--${node.orbStyle}` : "";
-  const labelClass = scale < 0.96 ? " desktop-node--compact" : "";
-
-  return `
-    <button
-      class="desktop-node ${weightClass}${orbClass}${labelClass}${isSelected ? " is-selected" : ""}${isRelated ? " is-related" : ""}"
-      type="button"
-      data-desktop-node
-      data-node-id="${node.id}"
-      style="--node-x:${node.x}px; --node-y:${node.y}px; --node-scale:${scale}; --node-accent:${accent};"
-      aria-label="${escapeHtml(`${node.name}, ${node.type}`)}"
-    >
-      <span class="desktop-node__halo" aria-hidden="true"></span>
-      <span class="desktop-node__ring" aria-hidden="true"></span>
-      ${renderMarkBadge(node.logoKey, node.name, "desktop-node__badge")}
-      <span class="desktop-node__label">
-        <strong>${escapeHtml(node.name)}</strong>
-        <span>${escapeHtml(node.type)}</span>
-      </span>
-    </button>
-  `;
-};
-
-export const renderHeader = (content) => `
-  <header class="app-header">
-    <div class="app-header__brand">
-      <span class="app-header__crest">
-        <img src="assets/det105.png" alt="" />
-      </span>
-      <div>
-        <p class="app-header__eyebrow">Det 105 AI Task Force</p>
-        <h1 class="app-header__title">AI Universe</h1>
-      </div>
-    </div>
-    <div class="app-header__actions">
-      <button class="header-chip" type="button" data-open-brief hidden>Map Brief</button>
-      <span class="header-state" data-header-state>${escapeHtml(content.subtitle)}</span>
-    </div>
-  </header>
-`;
-
-export const renderIntroOverlay = (content) => `
-  <div class="intro-overlay" data-intro-overlay>
-    <div class="intro-overlay__backdrop"></div>
-    <div class="intro-overlay__panel">
-      <span class="intro-overlay__eyebrow">Det 105 Command Core</span>
-      <h2 class="intro-overlay__title">${renderIntroTitle(content.title)}</h2>
-      <p class="intro-overlay__subtitle">${escapeHtml(content.subtitle)}</p>
-      <p class="intro-overlay__copy">${escapeHtml(content.teaser)}</p>
-      <p class="intro-overlay__detail">${escapeHtml(content.introPrompt)}</p>
-      <div class="intro-overlay__actions">
-        <button class="scene-button scene-button--primary" type="button" data-enter-primary>
-          ${escapeHtml(content.enterLabel)}
-        </button>
-      </div>
-    </div>
-  </div>
-`;
-
-export const renderBootOverlay = (steps, stepIndex, progress) => {
-  const activeStep = steps[Math.min(stepIndex, steps.length - 1)] ?? steps[0];
-
-  return `
-    <div class="boot-overlay__backdrop"></div>
-    <div class="boot-overlay__panel">
-      <span class="panel-kicker">System Entry</span>
-      <h2>Initializing AI Universe</h2>
-      <p class="boot-overlay__copy">${escapeHtml(activeStep?.copy ?? "Bringing the command interface online.")}</p>
-      <div class="boot-overlay__progress" aria-hidden="true">
-        <span style="--boot-progress:${progress};"></span>
-      </div>
-      <ol class="boot-overlay__steps" aria-label="Initialization progress">
-        ${steps
-          .map(
-            (step, index) => `
-              <li class="boot-overlay__step${index < stepIndex ? " is-complete" : ""}${index === stepIndex ? " is-active" : ""}">
-                <strong>${escapeHtml(step.label)}</strong>
-                <span>${escapeHtml(step.short)}</span>
-              </li>
-            `,
-          )
-          .join("")}
-      </ol>
-    </div>
-  `;
-};
-
-export const renderUniverseBrief = (content) => `
-  <aside class="universe-brief" data-universe-brief>
-    <button class="panel-close" type="button" data-close-brief aria-label="Close universe brief">
-      Close
-    </button>
-    <span class="panel-kicker">Universe Map</span>
-    <h3>${escapeHtml(content.universeBriefTitle)}</h3>
-    <p>${escapeHtml(content.universeBriefText)}</p>
-  </aside>
-`;
-
-const renderMobileToolCard = (galaxy, planet) => `
+const renderSectionChip = (section, activeCategory) => `
   <button
-    class="mobile-tool-card"
+    class="category-chip${activeCategory === section.id ? " is-active" : ""}"
     type="button"
-    data-mobile-tool
-    data-galaxy-id="${galaxy.id}"
-    data-planet-id="${planet.id}"
+    data-set-category="${section.id}"
   >
-    ${renderMarkBadge(planet.logoKey, planet.name, "mobile-tool-card__badge")}
-    <span class="mobile-tool-card__copy">
-      <strong>${escapeHtml(planet.name)}</strong>
-      <span>${escapeHtml(planet.type)}</span>
-      <p>${escapeHtml(planet.description)}</p>
-    </span>
+    ${escapeHtml(section.title)}
+    <span>${escapeHtml(section.count)}</span>
   </button>
 `;
 
-export const renderMobileExplorer = (content, galaxies, activeGalaxy) => `
-  <section class="mobile-explorer__hero">
-    <span class="panel-kicker">Det 105 Directory</span>
-    <h2>${escapeHtml(content.subtitle)}</h2>
-    <p>${escapeHtml("Explore AI tools and resources through a simplified category directory designed for touch-first browsing.")}</p>
-  </section>
+const renderOverviewCard = (section, activeCategory) => `
+  <button
+    class="category-overview-card${activeCategory === section.id ? " is-active" : ""}"
+    type="button"
+    data-set-category="${section.id}"
+    style="--section-accent:${section.accent};"
+  >
+    <span class="category-overview-card__kicker">${escapeHtml(section.subtitle)}</span>
+    <strong>${escapeHtml(section.title)}</strong>
+    <p>${escapeHtml(section.description)}</p>
+    <span class="category-overview-card__meta">${escapeHtml(`${section.count} items`)}</span>
+  </button>
+`;
 
-  <nav class="mobile-category-nav" aria-label="AI categories">
-    ${galaxies
-      .map(
-        (galaxy) => `
-          <button
-            class="mobile-category-chip${galaxy.id === activeGalaxy.id ? " is-active" : ""}"
-            type="button"
-            data-mobile-category
-            data-galaxy-id="${galaxy.id}"
-          >
-            ${escapeHtml(galaxy.title)}
-          </button>
-        `,
-      )
-      .join("")}
-  </nav>
+const renderToolCard = (item, { featured = false } = {}) => `
+  <article
+    class="tool-card${featured ? " tool-card--featured" : ""}"
+    data-tool-card
+    style="--item-accent:${item.accent ?? "#74beff"};"
+  >
+    <div class="tool-card__topline">
+      <span class="tool-card__tag">${escapeHtml(item.categoryTitle)}</span>
+      ${item.featured ? '<span class="tool-card__tag tool-card__tag--popular">Popular</span>' : ""}
+    </div>
+    <div class="tool-card__header">
+      ${renderMarkBadge(item.logoKey, item.name, "tool-card__badge")}
+      <div class="tool-card__identity">
+        <h3>${escapeHtml(item.name)}</h3>
+        <p>${escapeHtml(item.type)}</p>
+      </div>
+    </div>
+    <p class="tool-card__description">${escapeHtml(item.description)}</p>
+    <div class="tool-card__footer">
+      <button class="tool-card__action" type="button" data-open-tool="${item.id}">
+        View details
+      </button>
+      <a class="tool-card__link" href="${item.officialLink}" target="_blank" rel="noreferrer">
+        Official site
+      </a>
+    </div>
+  </article>
+`;
 
-  <section class="mobile-category-panel" style="--focus-accent:${activeGalaxy.accent};">
-    <div class="mobile-category-panel__header">
+const renderDirectorySection = (section, items) => `
+  <section class="directory-section" id="section-${section.id}" data-section-id="${section.id}">
+    <div class="directory-section__heading">
       <div>
-        <span class="panel-kicker">Category Focus</span>
-        <h3>${escapeHtml(activeGalaxy.title)}</h3>
+        <span class="panel-kicker">${escapeHtml(section.subtitle)}</span>
+        <h2>${escapeHtml(section.title)}</h2>
       </div>
-      <span class="mobile-category-panel__badge">${escapeHtml(`${activeGalaxy.planets.length} tools`)}</span>
+      <span class="directory-section__count">${escapeHtml(`${items.length} items`)}</span>
     </div>
-    <p class="mobile-category-panel__subtitle">${escapeHtml(activeGalaxy.subtitle)}</p>
-    <p class="mobile-category-panel__copy">${escapeHtml(activeGalaxy.why)}</p>
-  </section>
-
-  <section class="mobile-tool-list" aria-label="${escapeHtml(activeGalaxy.title)} tools">
-    ${activeGalaxy.planets.map((planet) => renderMobileToolCard(activeGalaxy, planet)).join("")}
+    <p class="directory-section__copy">${escapeHtml(section.description)}</p>
+    <div class="tool-grid">
+      ${items.map((item) => renderToolCard(item)).join("")}
+    </div>
   </section>
 `;
 
-export const renderDesktopUniverse = ({
-  core,
-  regions,
-  nodes,
-  dimensions,
-  selectedNodeId,
-  isFullscreen,
-  showBriefToggle,
-}) => {
-  const regionMap = new Map(regions.map((region) => [region.id, region]));
-  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
-  const selectedNode = selectedNodeId ? nodeMap.get(selectedNodeId) ?? null : null;
-  const relatedNodeIds = new Set(selectedNode?.relatedNodeIds ?? []);
-  const connections = buildDesktopConnections(nodes);
+export const renderAppShell = (content, stats) => `
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="site-brand" href="#top" aria-label="Back to top">
+        <span class="site-brand__crest">
+          <img src="assets/det105.png" alt="" />
+        </span>
+        <span class="site-brand__copy">
+          <span class="site-brand__eyebrow">Det 105 AI Task Force</span>
+          <strong>AI Directory</strong>
+        </span>
+      </a>
+      <button class="header-button" type="button" data-browse-directory>
+        Browse categories
+      </button>
+    </header>
 
-  return `
-    <div class="desktop-universe__controls">
-      <div class="desktop-map-controls">
-        <button class="zoom-control" type="button" data-desktop-zoom-out aria-label="Zoom out">-</button>
-        <button class="zoom-control" type="button" data-desktop-reset aria-label="Reset map view">Home</button>
-        <button class="zoom-control" type="button" data-desktop-zoom-in aria-label="Zoom in">+</button>
-      </div>
-      <div class="desktop-map-controls desktop-map-controls--meta">
-        <span class="desktop-map-controls__label">${escapeHtml(selectedNode ? `${selectedNode.name} selected` : "Connected AI ecosystem")}</span>
-        <button class="zoom-control zoom-control--wide" type="button" data-toggle-fullscreen aria-label="${
-          isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
-        }">
-          ${escapeHtml(isFullscreen ? "Exit full" : "Fullscreen")}
-        </button>
-      </div>
-    </div>
-
-    <div class="desktop-universe__viewport" data-desktop-viewport>
-      <div
-        class="desktop-universe__plane"
-        data-desktop-plane
-        style="--plane-width:${dimensions.width}px; --plane-height:${dimensions.height}px;"
-      >
-        <div class="desktop-universe__core" aria-hidden="true" style="--core-x:${core.x}px; --core-y:${core.y}px;">
-          <span class="desktop-universe__core-rings">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-          <div class="desktop-universe__core-shell">
-            <img src="assets/det105.png" alt="" />
-          </div>
-          <div class="desktop-universe__core-copy">
-            <span>${escapeHtml(core.title)}</span>
-            <strong>${escapeHtml(core.subtitle)}</strong>
+    <main class="page-shell" id="top">
+      <section class="hero-panel">
+        <div class="hero-panel__copy">
+          <span class="panel-kicker">Modern AI Directory</span>
+          <h1 class="hero-title">${renderIntroTitle(content.title)}</h1>
+          <p class="hero-subtitle">${escapeHtml(content.subtitle)}</p>
+          <p class="hero-description">${escapeHtml(content.teaser)}</p>
+          <div class="hero-actions">
+            <button class="scene-button scene-button--primary" type="button" data-browse-directory>
+              Explore categories
+            </button>
+            <a class="scene-button scene-button--ghost" href="#featured-tools">
+              Featured tools
+            </a>
           </div>
         </div>
 
-        <svg
-          class="desktop-connections"
-          viewBox="0 0 ${dimensions.width} ${dimensions.height}"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          ${connections.map((connection) => renderDesktopConnection(connection, selectedNodeId)).join("")}
-        </svg>
-
-        <div class="desktop-regions">
-          ${regions.map((region) => renderDesktopRegion(region, selectedNodeId, nodeMap)).join("")}
+        <div class="hero-panel__stats" aria-label="Directory summary">
+          <article class="stat-card">
+            <span>Real items</span>
+            <strong>${escapeHtml(stats.totalItems)}</strong>
+            <p>Curated tools, platforms, and operating concepts.</p>
+          </article>
+          <article class="stat-card">
+            <span>Categories</span>
+            <strong>${escapeHtml(stats.totalCategories)}</strong>
+            <p>Organized by topic instead of an experimental map layer.</p>
+          </article>
+          <article class="stat-card">
+            <span>Featured</span>
+            <strong>${escapeHtml(stats.featuredItems)}</strong>
+            <p>Higher-signal tools surface first without hiding the rest.</p>
+          </article>
         </div>
+      </section>
 
-        <div class="desktop-nodes">
-          ${nodes
-            .map((node) => renderDesktopNode(node, regionMap.get(node.regionId)?.accent ?? "#74beff", selectedNodeId, relatedNodeIds))
-            .join("")}
+      <section class="category-overview">
+        <div class="section-head">
+          <div>
+            <span class="panel-kicker">Topic Overview</span>
+            <h2>Explore by category</h2>
+          </div>
+          <p>Use the category bar or search to move through the directory quickly.</p>
         </div>
+        <div class="category-overview__grid" data-category-overview></div>
+      </section>
+
+      <section class="directory-toolbar" id="directory-start" data-directory-start>
+        <div class="directory-toolbar__search">
+          <label class="search-field">
+            <span class="search-field__label">Search the directory</span>
+            <input
+              type="search"
+              name="directory-search"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Search tools, topics, or use cases"
+              data-search-input
+            />
+          </label>
+          <button class="header-button header-button--ghost" type="button" data-clear-search hidden>
+            Clear
+          </button>
+        </div>
+        <nav class="category-nav" aria-label="AI directory topics" data-category-nav></nav>
+      </section>
+
+      <section class="featured-tools" id="featured-tools">
+        <div class="section-head">
+          <div>
+            <span class="panel-kicker">Featured Tools</span>
+            <h2>Start with the mainstream platforms</h2>
+          </div>
+          <p>These tools carry the most weight in current student and professional AI workflows.</p>
+        </div>
+        <div class="featured-grid" data-featured-grid></div>
+      </section>
+
+      <section class="directory-results">
+        <div class="directory-results__header">
+          <div>
+            <span class="panel-kicker">Directory</span>
+            <h2>Tools and resources</h2>
+          </div>
+          <p data-results-summary></p>
+        </div>
+        <div class="directory-sections" data-directory-sections></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <p class="site-footer__title">${escapeHtml(content.footerNote)}</p>
+        <p class="site-footer__copy">${escapeHtml(content.footerDisclaimer)}</p>
       </div>
-    </div>
+    </footer>
+  </div>
 
-    <div class="desktop-universe__meta">
-      <p class="desktop-universe__summary">
-        ${escapeHtml(
-          showBriefToggle
-            ? "Drag to pan, use the mouse wheel to zoom, and click any node for a briefing."
-            : "Mapped AI tools, model ecosystems, and learning fundamentals in one connected command field.",
-        )}
-      </p>
-    </div>
-  `;
-};
-
-export const renderScene = (content) => `
-  <main class="scene-shell">
-    <section class="scene-stage" data-scene-stage>
-      ${renderStarLayer(120, "deep")}
-      ${renderStarLayer(80, "mid")}
-      ${renderStarLayer(50, "near")}
-      <div class="nebula nebula--north" aria-hidden="true"></div>
-      <div class="nebula nebula--east" aria-hidden="true"></div>
-      <div class="nebula nebula--south" aria-hidden="true"></div>
-      <div class="scene-vignette" aria-hidden="true"></div>
-      <div class="scene-grid" aria-hidden="true"></div>
-      <aside class="scene-hint" data-scene-hint hidden></aside>
-
-      <section class="desktop-universe" data-desktop-universe hidden></section>
-      <section class="mobile-explorer" data-mobile-explorer hidden></section>
-
-      ${renderUniverseBrief(content)}
-
-      <aside class="detail-panel" data-detail-panel hidden></aside>
-      <section class="boot-overlay" data-boot-overlay hidden></section>
-    </section>
-
-    ${renderIntroOverlay(content)}
-  </main>
+  <div class="detail-overlay" data-detail-overlay hidden></div>
 `;
 
-export const renderDetailPanel = ({ title, kicker, subtitle, description, why, href, backLabel, mode }) => `
-  <span class="detail-panel__handle" aria-hidden="true"></span>
-  <button class="panel-close" type="button" data-close-detail aria-label="Close detail panel">
-    Close
+export const renderCategoryOverview = (sections, activeCategory) =>
+  sections.map((section) => renderOverviewCard(section, activeCategory)).join("");
+
+export const renderCategoryNav = (sections, activeCategory) => `
+  <button
+    class="category-chip${activeCategory === "all" ? " is-active" : ""}"
+    type="button"
+    data-set-category="all"
+  >
+    All topics
+    <span>${escapeHtml(sections.length)}</span>
   </button>
-  <span class="panel-kicker">${escapeHtml(kicker)}</span>
-  <h3>${escapeHtml(title)}</h3>
-  <p class="detail-panel__subtitle">${escapeHtml(subtitle)}</p>
-  <p class="detail-panel__description">${escapeHtml(description)}</p>
-  <div class="detail-panel__callout">
-    <span>Why it matters</span>
-    <p>${escapeHtml(why)}</p>
-  </div>
-  <p class="detail-panel__mode-hint">
-    ${
-      mode === "mobile"
-        ? "Use Close or Back to return to the directory."
-        : "Use Close, Back to map, or Escape to dismiss this briefing."
-    }
-  </p>
-  <div class="detail-panel__actions">
-    ${href ? `<a class="scene-button" href="${href}" target="_blank" rel="noreferrer">Open official link</a>` : ""}
-    <button class="scene-button scene-button--ghost" type="button" data-clear-selection>${escapeHtml(backLabel)}</button>
-  </div>
+  ${sections.map((section) => renderSectionChip(section, activeCategory)).join("")}
 `;
 
-export const renderSceneHint = ({ phase, isFullscreen }) => {
-  if (phase === "intro" || phase === "boot") {
-    return "";
-  }
+export const renderFeaturedGrid = (items) =>
+  items.length
+    ? items.map((item) => renderToolCard(item, { featured: true })).join("")
+    : `
+        <article class="empty-state empty-state--compact">
+          <h3>No featured tools match the current filters.</h3>
+          <p>Clear the search or topic filter to restore the full featured set.</p>
+        </article>
+      `;
 
-  if (phase === "mobile") {
+export const renderDirectorySections = (sections, itemsBySection, hasResults) => {
+  if (!hasResults) {
     return `
-      <span class="panel-kicker">Quick Navigation</span>
-      <p>Tap a category, then open any tool card for a concise briefing and official link.</p>
+      <article class="empty-state">
+        <h3>No tools match the current filters.</h3>
+        <p>Try a broader search or switch back to All topics.</p>
+      </article>
     `;
   }
 
-  return `
-    <span class="panel-kicker">Universe Navigation</span>
-    <p>Drag to pan, use the mouse wheel to zoom, and click nodes to inspect the connected AI ecosystem.${
-      isFullscreen ? " Press Escape to leave fullscreen." : ""
-    }</p>
-  `;
+  return sections
+    .map((section) => {
+      const items = itemsBySection.get(section.id) ?? [];
+      if (!items.length) {
+        return "";
+      }
+
+      return renderDirectorySection(section, items);
+    })
+    .join("");
 };
 
-export const renderFooter = (content) => `
-  <footer class="site-footer">
-    <div>
-      <p class="site-footer__title">${escapeHtml(content.footerNote)}</p>
-      <p class="site-footer__copy">${escapeHtml(content.footerDisclaimer)}</p>
+export const renderResultsSummary = ({ totalVisible, totalItems, query, activeCategoryLabel }) => {
+  if (query) {
+    return `${totalVisible} matching items${activeCategoryLabel ? ` in ${activeCategoryLabel}` : ""}.`;
+  }
+
+  if (activeCategoryLabel) {
+    return `${totalVisible} items in ${activeCategoryLabel}.`;
+  }
+
+  return `${totalItems} curated items across the full directory.`;
+};
+
+export const renderDetailPanel = ({ item, relatedItems }) => `
+  <div class="detail-overlay__backdrop" data-close-detail></div>
+  <aside class="detail-panel" aria-modal="true" role="dialog" aria-labelledby="detail-title">
+    <button class="panel-close" type="button" data-close-detail aria-label="Close detail panel">
+      Close
+    </button>
+    <div class="detail-panel__header">
+      ${renderMarkBadge(item.logoKey, item.name, "detail-panel__badge")}
+      <div>
+        <span class="panel-kicker">${escapeHtml(item.categoryTitle)}</span>
+        <h2 id="detail-title">${escapeHtml(item.name)}</h2>
+        <p class="detail-panel__subtitle">${escapeHtml(item.type)}</p>
+      </div>
     </div>
-  </footer>
+    <p class="detail-panel__description">${escapeHtml(item.description)}</p>
+    <div class="detail-panel__callout">
+      <span>Why it matters</span>
+      <p>${escapeHtml(item.goodFor)}</p>
+    </div>
+    <div class="detail-panel__meta">
+      ${item.tags.map((tag) => `<span class="detail-pill">${escapeHtml(tag)}</span>`).join("")}
+    </div>
+    ${
+      relatedItems.length
+        ? `
+            <div class="detail-panel__related">
+              <span>Related ecosystem</span>
+              <div class="detail-panel__related-list">
+                ${relatedItems
+                  .map(
+                    (related) => `
+                      <button type="button" class="detail-pill detail-pill--interactive" data-open-tool="${related.id}">
+                        ${escapeHtml(related.name)}
+                      </button>
+                    `,
+                  )
+                  .join("")}
+              </div>
+            </div>
+          `
+        : ""
+    }
+    <div class="detail-panel__actions">
+      <a class="scene-button scene-button--primary" href="${item.officialLink}" target="_blank" rel="noreferrer">
+        Open official link
+      </a>
+      <button class="scene-button scene-button--ghost" type="button" data-focus-category="${item.categoryId}">
+        View ${escapeHtml(item.categoryTitle)}
+      </button>
+    </div>
+  </aside>
 `;

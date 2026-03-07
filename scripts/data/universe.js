@@ -1,13 +1,14 @@
 export const universeContent = {
   title: "DET 105 AI TASK FORCE",
-  subtitle: "Explore the AI Universe",
-  teaser: "Launch an interactive map of modern AI tools, systems, and ecosystems.",
+  subtitle: "Explore modern AI tools by topic.",
+  teaser:
+    "A clean, curated AI directory built for Det 105 students who need quick orientation across today's major tools, workflows, and foundational practices.",
   introPrompt:
-    "A premium command-cosmos built for students who need a clear strategic view of the AI landscape without a dense course shell.",
-  enterLabel: "Explore AI Universe",
-  universeBriefTitle: "Universe Map",
+    "Browse by category, compare real products, and open concise detail panels with official links instead of navigating a heavy experimental map.",
+  enterLabel: "Browse AI Directory",
+  universeBriefTitle: "AI Directory",
   universeBriefText:
-    "Desktop mode presents one connected AI universe with region clusters, subtle relationship webbing, and node-level briefings. Mobile automatically switches to a simpler category explorer.",
+    "This site now uses a stable categorized directory across desktop and mobile. It prioritizes clear navigation, reliable detail panels, and maintainable structured content over map-style exploration.",
   footerNote: "Det 105 AI Task Force - Student AI Exploration Hub",
   footerDisclaimer:
     "Brand assets are sourced from official public origins where practical. Tool access and availability may change.",
@@ -1405,3 +1406,61 @@ export const desktopUniverseNodes = [
     },
   ]),
 ];
+
+const directorySectionCopy = {
+  learning:
+    "Foundational practices, evaluation habits, and operating knowledge that improve judgment across every other AI workflow.",
+  llms:
+    "Mainstream assistants and model ecosystems used for drafting, reasoning, planning, and general-purpose AI work.",
+  coding:
+    "AI-native editors, coding assistants, and terminal agents that accelerate software workflows.",
+  research:
+    "Source-grounded research systems, paper discovery tools, and notebook-style knowledge workflows.",
+  agents:
+    "Automation and orchestration platforms for chaining tools, tasks, and AI-assisted workflows together.",
+  local:
+    "Self-hosted runtimes, open-source interfaces, and local infrastructure for running models closer to the user.",
+  media:
+    "Image, video, and multimodal tools for visual ideation, generation, editing, and media production.",
+  voice:
+    "Speech, meeting, transcription, and audio-generation systems for voice-first AI workflows.",
+};
+
+export const directorySections = desktopUniverseRegions.map((region) => {
+  const items = desktopUniverseNodes.filter((node) => node.regionId === region.id);
+
+  return {
+    id: region.id,
+    title: region.title,
+    subtitle: region.subtitle,
+    description: directorySectionCopy[region.id] ?? region.subtitle,
+    accent: region.accent,
+    count: items.length,
+  };
+});
+
+export const directoryItems = [...desktopUniverseNodes]
+  .map((node) => ({
+    ...node,
+    categoryId: node.regionId,
+    categoryTitle: regionLookup.get(node.regionId)?.title ?? node.regionId,
+    officialLink: node.href,
+    featured: (node.importance ?? 1) >= 1.18,
+    tags: [node.type, regionLookup.get(node.regionId)?.title].filter(Boolean),
+  }))
+  .sort((left, right) => {
+    const importanceDelta = (right.importance ?? 1) - (left.importance ?? 1);
+    if (importanceDelta !== 0) {
+      return importanceDelta;
+    }
+
+    return left.name.localeCompare(right.name);
+  });
+
+export const featuredDirectoryItems = directoryItems.filter((item) => item.featured);
+
+export const directoryStats = {
+  totalItems: directoryItems.length,
+  totalCategories: directorySections.length,
+  featuredItems: featuredDirectoryItems.length,
+};
