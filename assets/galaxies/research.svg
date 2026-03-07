@@ -1,0 +1,22 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="researchCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(164 154) rotate(90) scale(124)">
+      <stop stop-color="#D9F3FF" stop-opacity="0.76"/>
+      <stop offset="0.38" stop-color="#8FCBFF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#071120" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="164" cy="154" r="118" fill="url(#researchCore)"/>
+  <circle cx="164" cy="154" r="88" stroke="#9FD0FF" stroke-opacity="0.28"/>
+  <circle cx="164" cy="154" r="58" stroke="#D6EDFF" stroke-opacity="0.42" stroke-dasharray="8 12"/>
+  <path d="M164 62V246" stroke="#B5E3FF" stroke-opacity="0.28" stroke-width="4"/>
+  <path d="M72 154H256" stroke="#B5E3FF" stroke-opacity="0.28" stroke-width="4"/>
+  <path d="M112 102L216 206" stroke="#9BD8FF" stroke-opacity="0.2" stroke-width="4"/>
+  <path d="M216 102L112 206" stroke="#9BD8FF" stroke-opacity="0.2" stroke-width="4"/>
+  <path d="M164 154L226 110" stroke="#D6EDFF" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="164" cy="154" r="18" fill="#9FD0FF"/>
+  <circle cx="226" cy="110" r="12" fill="#DDF3FF"/>
+  <rect x="94" y="206" width="92" height="34" rx="17" fill="#09182B" stroke="#9FD0FF" stroke-opacity="0.28"/>
+  <path d="M114 223H168" stroke="#DDF3FF" stroke-width="4" stroke-linecap="round"/>
+  <path d="M114 236H154" stroke="#9FD0FF" stroke-opacity="0.7" stroke-width="4" stroke-linecap="round"/>
+</svg>

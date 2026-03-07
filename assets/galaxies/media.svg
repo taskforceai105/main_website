@@ -1,0 +1,25 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mediaPrism" x1="116" y1="86" x2="220" y2="230" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCCEFF"/>
+      <stop offset="0.38" stop-color="#B8B1FF"/>
+      <stop offset="0.72" stop-color="#79D7FF"/>
+      <stop offset="1" stop-color="#FFE29B"/>
+    </linearGradient>
+    <radialGradient id="mediaGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 164) rotate(90) scale(120)">
+      <stop stop-color="#AA97FF" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#060E1F" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="160" cy="164" r="112" fill="url(#mediaGlow)"/>
+  <circle cx="160" cy="164" r="100" stroke="#B9B0FF" stroke-opacity="0.2"/>
+  <path d="M110 88L214 160L110 232V88Z" fill="#FFFFFF" fill-opacity="0.02" stroke="url(#mediaPrism)" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M214 160H270" stroke="#FFD67D" stroke-width="10" stroke-linecap="round"/>
+  <path d="M214 160L256 124" stroke="#7FD9FF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M214 160L256 196" stroke="#C6BAFF" stroke-width="8" stroke-linecap="round"/>
+  <path d="M106 160H62" stroke="#E7F2FF" stroke-opacity="0.8" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="214" cy="160" r="14" fill="#F4F6FF"/>
+  <circle cx="256" cy="124" r="10" fill="#7FD9FF"/>
+  <circle cx="270" cy="160" r="10" fill="#FFD67D"/>
+  <circle cx="256" cy="196" r="10" fill="#C6BAFF"/>
+</svg>

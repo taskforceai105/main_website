@@ -56,6 +56,8 @@ Current implementation already follows this model:
   - `docs/PROJECT_CONTEXT.md`
   - `docs/NEXT_STEPS.md`
   - `docs/SESSION_HANDOFF.md`
+- If you are changing live tools, outbound links, or brand assets, also read:
+  - `docs/RESOURCE_AUDIT.md`
 - Inspect the current homepage implementation before making changes:
   - `index.html`
   - `scripts/app.js`

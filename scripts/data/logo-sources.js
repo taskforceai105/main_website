@@ -108,6 +108,42 @@ export const logoCatalog = {
     note: "Official public Google icon used as fallback for Google-owned tools without a standalone product mark.",
     official: true,
   },
+  githubCopilot: {
+    type: "image",
+    src: "assets/logos/github.svg",
+    alt: "GitHub logo",
+    fit: "contain",
+    source: "https://github.githubassets.com/favicons/favicon.svg",
+    note: "Official GitHub favicon used as the closest stable public mark for GitHub Copilot.",
+    official: true,
+  },
+  elicit: {
+    type: "image",
+    src: "assets/logos/elicit.ico",
+    alt: "Elicit logo",
+    fit: "contain",
+    source: "https://elicit.com/favicon.ico",
+    note: "Official public favicon from Elicit.",
+    official: true,
+  },
+  runway: {
+    type: "image",
+    src: "assets/logos/runway.ico",
+    alt: "Runway logo",
+    fit: "contain",
+    source: "https://runwayml.com/favicon.ico",
+    note: "Official public favicon from Runway.",
+    official: true,
+  },
+  lmStudio: {
+    type: "image",
+    src: "assets/logos/lmstudio.ico",
+    alt: "LM Studio logo",
+    fit: "contain",
+    source: "https://lmstudio.ai/favicon.ico",
+    note: "Official public favicon from LM Studio.",
+    official: true,
+  },
   notebooklm: {
     type: "monogram",
     text: "NLM",
@@ -158,9 +194,49 @@ export const logoCatalog = {
   },
 };
 
+export const galaxyVisualCatalog = {
+  llms: {
+    src: "assets/galaxies/llms.svg",
+    alt: "Signal lattice visual for the LLM galaxy",
+    source: "Created locally for the Det 105 AI universe interface.",
+  },
+  coding: {
+    src: "assets/galaxies/coding.svg",
+    alt: "Circuit and terminal lattice visual for the coding galaxy",
+    source: "Created locally for the Det 105 AI universe interface.",
+  },
+  research: {
+    src: "assets/galaxies/research.svg",
+    alt: "Radar and archive network visual for the research galaxy",
+    source: "Created locally for the Det 105 AI universe interface.",
+  },
+  media: {
+    src: "assets/galaxies/media.svg",
+    alt: "Prism and spectrum visual for the media galaxy",
+    source: "Created locally for the Det 105 AI universe interface.",
+  },
+  local: {
+    src: "assets/galaxies/local.svg",
+    alt: "Local compute and chip visual for the local AI galaxy",
+    source: "Created locally for the Det 105 AI universe interface.",
+  },
+  learning: {
+    src: "assets/galaxies/learning.svg",
+    alt: "Knowledge orbit visual for the learning galaxy",
+    source: "Created locally for the Det 105 AI universe interface.",
+  },
+};
+
 export const logoSourceRows = Object.entries(logoCatalog).map(([id, entry]) => ({
   id,
   source: entry.source ?? "Generated locally in code",
   official: entry.official,
   note: entry.note,
+}));
+
+export const galaxyVisualRows = Object.entries(galaxyVisualCatalog).map(([id, entry]) => ({
+  id,
+  source: entry.source,
+  official: false,
+  note: "Custom themed SVG visual for a galaxy node.",
 }));

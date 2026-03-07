@@ -45,20 +45,26 @@ The homepage is currently composed from these major UI layers:
 
 State lives in `scripts/app.js`:
 
+- `interfaceMode`: `"pc"` or `"mobile"`
 - `phase`: `"intro"`, `"universe"`, or `"galaxy"`
 - `selectedGalaxyId`
+- `focusedGalaxyId`
 - `selectedPlanetId`
 - `universeBriefOpen`
+- `universeZoom`: `"overview"` or `"focused"`
 - `transitionLock`
 
 Important flow behavior:
 
 - Default state is `phase: "intro"`.
+- Intro now includes an explicit interface-profile choice: `PC` or `Mobile`.
+- The selected interface mode is persisted in `localStorage` under `det105-interface-mode`.
 - `enterUniverse()` moves from intro to universe.
 - `enterGalaxy(galaxyId)` moves from universe to galaxy and clears selected tool state.
 - In galaxy phase, clicking a planet/tool node opens the detail panel.
 - Backing out from galaxy view returns to universe with a timed transition.
 - Escape key exits the deepest currently open layer first.
+- Desktop wheel input and mobile touch gestures both participate in the current zoom/focus model.
 
 There is also a debug URL helper:
 
@@ -87,6 +93,8 @@ Each galaxy includes title/subtitle, accent colors, universe position, focus cop
 - Local logos are stored under `assets/logos/`.
 - `scripts/data/logo-sources.js` maps logical logo keys to local assets or monogram fallbacks.
 - `assets/logos/SOURCES.md` documents local asset origins.
+- `assets/galaxies/` now contains custom local SVG visuals for each galaxy cluster.
+- `docs/RESOURCE_AUDIT.md` tracks the current outbound-link audit and source decisions.
 - Current code prefers local files in production rather than depending on remote hotlinks.
 - Some concept nodes and at least one product (`notebooklm`) intentionally use monogram fallbacks.
 
@@ -101,34 +109,42 @@ Each galaxy includes title/subtitle, accent colors, universe position, focus cop
 
 Future sessions should treat `docs/` carefully and avoid assuming it is the live homepage source.
 
-## Mobile / Responsiveness Notes
+## Mode Separation / Responsiveness Notes
 
-The main stylesheet includes responsive breakpoints at roughly:
+The homepage now intentionally supports two distinct interface profiles:
 
-- `980px`
-- `760px`
-- `520px`
+- `PC` mode
+- `Mobile` mode
 
-The current mobile implementation is not just a shrunken desktop layout. At `760px` and below, the homepage now uses a mobile-specific adaptation:
+This is explicit app state, not just CSS breakpoint behavior.
 
-- intro overlay uses tighter typography, safe-area-aware padding, and full-width touch targets
-- universe view becomes a guided composition:
-  - command core stays prominent
-  - galaxy destinations shift into a horizontal card rail
-  - only one galaxy's metadata is surfaced in the dedicated focus card at a time
-- galaxy drilldown becomes a vertical flow:
-  - hero card for the selected galaxy
-  - stacked tool cards instead of freeform absolute node placement
-- tool details open in a mobile bottom sheet / fixed panel with its own close affordance
+Current implementation details:
 
-Desktop and tablet widths still keep the richer spatial map/drilldown composition.
+- Intro profile selection is rendered in `scripts/components.js`.
+- `scripts/app.js` stores the selected mode, updates mode-specific hints, and keeps PC/mobile control affordances separate.
+- Mobile mode shows rotate guidance on the intro screen only.
+- PC mode keeps desktop-oriented hinting and wheel/click focus behavior.
+- Mobile mode keeps touch-oriented hinting, compact overlays, and mobile-safe panel behavior.
+
+Current responsive/layout strategy in `styles.css`:
+
+- Desktop/PC mode preserves the richer spatial composition.
+- Narrow-width mobile mode uses a guided mobile composition with simplified galaxy cards and mobile-safe tool panels.
+- Low-height landscape mobile mode has its own dedicated treatment so rotated phones do not fall back into the desktop composition accidentally.
+- The mobile detail panel is a fixed bottom sheet in portrait and a bounded floating panel in low-height landscape.
 
 ## Known Fragile / Important Areas
 
 - `transitionLock` timing in `scripts/app.js` is important for avoiding conflicting clicks during phase changes.
 - The universe layer / command core / focus layer interaction is heavily CSS-driven; visual changes often require coordinated CSS and state review.
+- The mode split is shared across JS state, intro rendering, hint rendering, zoom controls, and responsive CSS. Future edits should treat that as one system.
 - The current repo has no automated lint/test/build pipeline.
 - Browser verification inside the sandbox may be limited; this session could inspect code and file structure directly, but could not stand up a local preview server due sandbox socket restrictions.
+
+Current real-device follow-up notes:
+
+- The mobile intro has been tightened substantially, but should still be checked on actual iPhone/Android hardware for final CTA fit and safe-area comfort.
+- The mobile universe focus card and the low-height landscape framing are improved, but still merit real-device polish after live touch testing.
 
 ## What A New Session Should Inspect First
 

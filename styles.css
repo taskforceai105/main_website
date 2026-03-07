@@ -22,6 +22,9 @@
   --travel-x: 0%;
   --travel-y: 0%;
   --travel-accent: #74beff;
+  --camera-scale: 1;
+  --camera-x: 0%;
+  --camera-y: 0%;
   --shadow-lg: 0 34px 90px rgba(0, 5, 18, 0.62);
   --shadow-md: 0 20px 46px rgba(0, 5, 18, 0.42);
   --radius-xl: 34px;
@@ -115,6 +118,9 @@ a {
 
 .app-shell {
   --header-opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .app-shell[data-phase="intro"] {
@@ -193,6 +199,11 @@ a {
   gap: 12px;
 }
 
+.header-chip--mode {
+  border-color: rgba(132, 255, 231, 0.18);
+  color: var(--success);
+}
+
 .header-chip,
 .header-state,
 .scene-button,
@@ -253,14 +264,17 @@ a {
 }
 
 .scene-shell {
+  display: flex;
+  flex: 1 1 auto;
   position: relative;
   min-height: calc(100vh - 150px);
   min-height: calc(100svh - 150px);
-  margin-top: 18px;
 }
 
 .scene-stage {
   position: relative;
+  width: 100%;
+  flex: 1 1 auto;
   min-height: min(860px, calc(100vh - 180px));
   min-height: min(860px, calc(100svh - 180px));
   overflow: hidden;
@@ -284,6 +298,15 @@ a {
 
 .scene-stage > * {
   position: absolute;
+}
+
+.universe-camera {
+  inset: 0;
+  z-index: 4;
+  transition:
+    transform 900ms cubic-bezier(0.16, 0.88, 0.18, 1),
+    opacity 520ms ease;
+  transform: translate3d(var(--camera-x), var(--camera-y), 0) scale(var(--camera-scale));
 }
 
 .star-layer {
@@ -366,6 +389,90 @@ a {
     radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--travel-accent) 12%, transparent), transparent 28%),
     linear-gradient(90deg, transparent, color-mix(in srgb, var(--travel-accent) 8%, transparent), transparent);
   pointer-events: none;
+}
+
+.scene-hint,
+.scene-zoom {
+  z-index: 12;
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(8px);
+  pointer-events: none;
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease,
+    filter 280ms ease;
+}
+
+.scene-hint.is-active,
+.scene-zoom.is-active {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+}
+
+.scene-hint {
+  left: 24px;
+  bottom: 24px;
+  width: min(340px, calc(100% - 48px));
+  padding: 18px 18px 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(127, 194, 255, 0.14);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 26%),
+    linear-gradient(180deg, rgba(7, 17, 36, 0.84), rgba(4, 10, 22, 0.94));
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+}
+
+.scene-hint p {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.scene-zoom {
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 194, 255, 0.14);
+  background: rgba(7, 15, 33, 0.84);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+}
+
+.zoom-control {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(127, 194, 255, 0.18);
+  border-radius: 50%;
+  background: rgba(5, 11, 25, 0.78);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.zoom-control:hover,
+.zoom-control:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(153, 219, 255, 0.34);
+}
+
+.zoom-control__label {
+  min-width: 76px;
+  color: var(--text-soft);
+  text-align: center;
+  font-size: 0.84rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .command-core {
@@ -595,6 +702,24 @@ a {
     0 0 42px color-mix(in srgb, var(--galaxy-accent) 18%, transparent);
 }
 
+.galaxy-node__visual {
+  position: absolute;
+  inset: 50%;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  opacity: 0.86;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.galaxy-node__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--galaxy-accent) 24%, transparent));
+}
+
 .galaxy-node__label {
   text-align: center;
 }
@@ -654,6 +779,23 @@ a {
   position: absolute;
   inset: 0;
   z-index: 1;
+}
+
+.focus-galaxy__visual {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 360px;
+  height: 360px;
+  transform: translate(-50%, -50%);
+  opacity: 0.32;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.focus-galaxy__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .focus-galaxy__mist {
@@ -912,7 +1054,96 @@ a {
 }
 
 .universe-focus-card {
-  display: none;
+  right: 24px;
+  bottom: 24px;
+  width: min(360px, calc(100% - 48px));
+  padding: 20px;
+  border-radius: 26px;
+  border: 1px solid color-mix(in srgb, var(--panel-accent, var(--accent)) 26%, transparent);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(7, 17, 36, 0.9), rgba(4, 10, 22, 0.96));
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(16px);
+  z-index: 8;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(10px);
+  pointer-events: none;
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease,
+    filter 280ms ease;
+}
+
+.universe-focus-card.is-active {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+}
+
+.universe-focus-card__header {
+  display: flex;
+  gap: 14px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.universe-focus-card__header h3 {
+  margin: 12px 0 0;
+  font-family: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
+  font-size: 1.7rem;
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+}
+
+.universe-focus-card__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 194, 255, 0.14);
+  background: rgba(7, 15, 33, 0.72);
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.universe-focus-card__subtitle,
+.universe-focus-card__copy {
+  margin: 0;
+}
+
+.universe-focus-card__subtitle {
+  margin-top: 14px;
+  color: color-mix(in srgb, var(--panel-accent, var(--accent)) 68%, white 14%);
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.universe-focus-card__copy {
+  margin-top: 12px;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.universe-focus-card__hint {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.universe-focus-card__actions {
+  margin-top: 18px;
+}
+
+.universe-focus-card__actions .scene-button {
+  width: 100%;
 }
 
 .universe-brief {
@@ -921,6 +1152,23 @@ a {
 
 .detail-panel {
   top: 24px;
+  max-height: calc(100% - 48px);
+  overflow: auto;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(10px);
+  pointer-events: none;
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease,
+    filter 280ms ease;
+}
+
+.detail-panel.is-active {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
 }
 
 .panel-close {
@@ -993,6 +1241,12 @@ a {
 
 .detail-panel__handle {
   display: none;
+}
+
+.detail-panel__mode-hint {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
 .scene-button {
@@ -1125,6 +1379,192 @@ a {
   margin-top: 24px;
 }
 
+.intro-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.mode-card {
+  position: relative;
+  padding: 18px;
+  border-radius: 26px;
+  border: 1px solid rgba(127, 194, 255, 0.12);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.05), transparent 26%),
+    linear-gradient(180deg, rgba(7, 17, 36, 0.84), rgba(4, 10, 22, 0.94));
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.mode-card:hover,
+.mode-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(153, 219, 255, 0.28);
+  box-shadow: var(--shadow-md);
+}
+
+.mode-card.is-selected {
+  border-color: rgba(132, 255, 231, 0.34);
+  box-shadow:
+    inset 0 0 0 1px rgba(132, 255, 231, 0.12),
+    var(--shadow-md);
+}
+
+.mode-card.is-recommended::after {
+  content: "Recommended";
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 194, 255, 0.12);
+  background: rgba(7, 15, 33, 0.72);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mode-card__eyebrow,
+.mode-card strong,
+.mode-card p,
+.mode-card__footer {
+  display: block;
+}
+
+.mode-card__eyebrow {
+  color: var(--success);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mode-card strong {
+  margin-top: 12px;
+  font-family: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
+  font-size: 1.12rem;
+}
+
+.mode-card p {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.mode-card__footer {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.intro-mode-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 18px;
+}
+
+.intro-mode-panel__copy {
+  padding: 20px;
+  border-radius: 26px;
+  border: 1px solid rgba(127, 194, 255, 0.12);
+  background: rgba(7, 15, 33, 0.56);
+}
+
+.intro-mode-panel__copy h3 {
+  margin: 12px 0 0;
+  font-family: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.intro-mode-panel__copy p {
+  margin: 12px 0 0;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.rotate-guidance {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border-radius: 26px;
+  border: 1px solid rgba(127, 194, 255, 0.12);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(180deg, rgba(7, 17, 36, 0.84), rgba(4, 10, 22, 0.94));
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(10px);
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease,
+    filter 280ms ease;
+}
+
+.rotate-guidance.is-active {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.rotate-guidance__device {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+}
+
+.rotate-guidance__frame,
+.rotate-guidance__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+}
+
+.rotate-guidance__frame {
+  width: 42px;
+  height: 70px;
+  inset: 2px auto auto 16px;
+  border: 2px solid rgba(151, 216, 255, 0.72);
+  background:
+    linear-gradient(180deg, rgba(9, 21, 42, 0.92), rgba(4, 10, 22, 0.96));
+  animation: device-rotate 2.8s ease-in-out infinite;
+}
+
+.rotate-guidance__glow {
+  border: 1px dashed rgba(132, 255, 231, 0.26);
+  animation: pulse-ring 2.8s ease-in-out infinite;
+}
+
+.rotate-guidance__title,
+.rotate-guidance__copy {
+  margin: 0;
+}
+
+.rotate-guidance__title {
+  color: var(--text);
+  font-family: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
+  font-size: 1rem;
+}
+
+.rotate-guidance__copy {
+  margin-top: 8px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
 .app-shell[data-phase="intro"] .scene-stage {
   filter: blur(18px) saturate(0.78) brightness(0.55);
   transform: scale(1.03);
@@ -1249,19 +1689,43 @@ a {
   }
 }
 
+@keyframes device-rotate {
+  0%,
+  20%,
+  100% {
+    transform: rotate(0deg) translate3d(0, 0, 0);
+  }
+
+  45%,
+  70% {
+    transform: rotate(90deg) translate3d(10px, -10px, 0);
+  }
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
 @media (max-width: 980px) {
   .page-shell {
     width: min(100vw - 20px, 100%);
   }
 
   .app-header {
-    flex-direction: column;
-    align-items: start;
     border-radius: 28px;
   }
 
-  .scene-stage {
-    min-height: 880px;
+  .app-header__actions {
+    flex-wrap: wrap;
   }
 
   .focus-galaxy__core {
@@ -1284,8 +1748,8 @@ a {
   }
 
   .app-header {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     padding: 12px 14px;
     border-radius: 24px;
     gap: 12px;
@@ -1311,15 +1775,26 @@ a {
   }
 
   .app-header__actions {
-    display: none;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] {
+    gap: 12px;
+    padding-bottom: calc(10px + var(--safe-bottom));
+  }
+
+  .header-chip {
+    flex: 1 1 auto;
+  }
+
+  .header-state {
+    width: 100%;
+    justify-content: center;
   }
 
   .scene-stage {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    min-height: calc(100svh - 126px);
-    padding: 20px 16px 24px;
+    min-height: calc(100svh - 148px);
     border-radius: 30px;
   }
 
@@ -1350,423 +1825,47 @@ a {
     opacity: 0.7;
   }
 
-  .scene-stage > .command-core,
-  .scene-stage > .universe-layer,
-  .scene-stage > .universe-focus-card,
-  .scene-stage > .focus-layer {
-    position: relative;
-    inset: auto;
-  }
-
-  .scene-stage > .universe-brief {
-    display: none !important;
-  }
-
-  .command-core {
-    top: auto;
-    left: auto;
-    width: 100%;
-    gap: 12px;
-    padding-top: 10px;
-    transform: none;
-  }
-
-  .command-core__rings {
-    inset: -42px;
-  }
-
-  .command-core__rings span:nth-child(1) {
-    width: 220px;
-    height: 220px;
-  }
-
-  .command-core__rings span:nth-child(2) {
-    width: 270px;
-    height: 270px;
-  }
-
-  .command-core__rings span:nth-child(3) {
-    width: 320px;
-    height: 320px;
-    opacity: 0.28;
-  }
-
-  .command-core__shell {
-    width: min(160px, 48vw);
-  }
-
-  .command-core__text {
-    max-width: 100%;
-    padding: 0 8px;
-  }
-
-  .command-core__text strong {
-    font-size: 1.4rem;
-  }
-
-  .command-core__text span {
-    max-width: 18rem;
-    margin-inline: auto;
-    line-height: 1.55;
-  }
-
-  .universe-layer {
-    z-index: 6;
-    display: flex;
-    gap: 12px;
-    width: 100%;
-    margin-top: 2px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    padding: 2px 2px 8px;
-    scrollbar-width: none;
-  }
-
-  .universe-layer::-webkit-scrollbar {
-    display: none;
-  }
-
-  .galaxy-node {
-    position: relative;
-    top: auto;
-    left: auto;
-    flex: 0 0 clamp(152px, 43vw, 188px);
-    min-height: 156px;
-    width: auto;
-    padding: 16px 14px 18px;
-    justify-items: center;
-    align-content: start;
-    gap: 12px;
-    transform: none;
-    border-radius: 24px;
-    border: 1px solid rgba(126, 192, 255, 0.12);
-    background:
-      radial-gradient(circle at 14% 30%, rgba(122, 188, 255, 0.14), transparent 28%),
-      linear-gradient(180deg, rgba(6, 14, 30, 0.84), rgba(4, 9, 20, 0.96));
-    box-shadow: var(--shadow-md);
-    scroll-snap-align: start;
-  }
-
-  .galaxy-node__rings {
-    inset: auto;
-    top: 46px;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .galaxy-node__rings span:nth-child(1) {
-    width: 84px;
-    height: 84px;
-  }
-
-  .galaxy-node__rings span:nth-child(2) {
-    width: 104px;
-    height: 104px;
-  }
-
-  .galaxy-node__rings span:nth-child(3) {
-    display: none;
-  }
-
-  .galaxy-node__orb {
-    width: 68px;
-    height: 68px;
-  }
-
-  .galaxy-node__label {
-    text-align: center;
-  }
-
-  .galaxy-node__label strong {
-    font-size: 0.98rem;
-  }
-
-  .galaxy-node__label span {
-    margin-top: 4px;
-    font-size: 0.72rem;
-    line-height: 1.45;
-  }
-
-  .galaxy-node:hover,
-  .galaxy-node:focus-visible,
-  .galaxy-node.is-selected,
-  .galaxy-node.is-focused {
-    transform: none;
-  }
-
-  .galaxy-node.is-focused {
-    border-color: color-mix(in srgb, var(--galaxy-accent) 38%, rgba(126, 192, 255, 0.18));
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--galaxy-accent) 28%, transparent),
-      0 20px 44px rgba(0, 7, 22, 0.54);
-  }
-
-  .universe-focus-card {
-    display: block;
-    z-index: 7;
-    width: 100%;
-    margin-top: auto;
-    padding: 18px;
-    border-radius: 26px;
-    border: 1px solid color-mix(in srgb, var(--panel-accent, var(--accent)) 26%, transparent);
-    background:
-      radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.08), transparent 26%),
-      linear-gradient(180deg, rgba(7, 17, 36, 0.9), rgba(4, 10, 22, 0.96));
-    box-shadow: var(--shadow-lg);
-  }
-
-  .universe-focus-card__header {
-    display: flex;
-    gap: 14px;
-    align-items: start;
-    justify-content: space-between;
-  }
-
-  .universe-focus-card__header h3 {
-    margin: 12px 0 0;
-    font-family: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
-    font-size: 1.7rem;
-    line-height: 0.96;
-    letter-spacing: -0.05em;
-  }
-
-  .universe-focus-card__badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(127, 194, 255, 0.14);
-    background: rgba(7, 15, 33, 0.72);
-    color: var(--text-muted);
-    white-space: nowrap;
-    font-size: 0.78rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .universe-focus-card__subtitle,
-  .universe-focus-card__copy {
-    margin: 0;
-  }
-
-  .universe-focus-card__subtitle {
-    margin-top: 14px;
-    color: color-mix(in srgb, var(--panel-accent, var(--accent)) 68%, white 14%);
-    font-size: 0.82rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .universe-focus-card__copy {
-    margin-top: 12px;
-    color: var(--text-soft);
-    line-height: 1.65;
-  }
-
-  .universe-focus-card__actions {
-    margin-top: 18px;
-  }
-
-  .universe-focus-card__actions .scene-button {
-    width: 100%;
-    min-height: 52px;
-  }
-
-  .focus-layer {
-    width: 100%;
-    z-index: 8;
-    opacity: 0;
-    transform: none;
-  }
-
-  .focus-scene {
-    position: relative;
-    inset: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    padding: 0;
-  }
-
-  .focus-scene__toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .back-control {
-    width: 100%;
-    min-height: 48px;
-  }
-
-  .focus-scene__meta {
-    letter-spacing: 0.18em;
-  }
-
-  .focus-galaxy {
-    position: relative;
-    inset: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .focus-galaxy__mist {
-    filter: blur(28px);
-    opacity: 0.7;
-  }
-
-  .focus-galaxy__core {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    padding: 22px 18px 18px;
-    border-radius: 26px;
-    transform: none;
-  }
-
-  .focus-galaxy__core-rings {
-    inset: -30px;
-    opacity: 0.55;
-  }
-
-  .focus-galaxy__core-rings span:nth-child(1) {
-    width: 220px;
-    height: 220px;
-  }
-
-  .focus-galaxy__core-rings span:nth-child(2) {
-    width: 280px;
-    height: 280px;
-  }
-
-  .focus-galaxy__core-copy h2 {
-    font-size: clamp(2.2rem, 10vw, 3rem);
-  }
-
-  .focus-galaxy__core-copy p {
-    line-height: 1.65;
-  }
-
-  .focus-planets {
-    position: relative;
-    inset: auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    align-content: stretch;
-  }
-
-  .focus-planets__header {
-    display: block;
-    padding: 0 4px 4px;
-  }
-
-  .focus-planets__header p {
-    margin: 8px 0 0;
-    color: var(--text-muted);
-    line-height: 1.55;
-  }
-
-  .planet-node {
-    position: relative;
-    top: auto;
-    left: auto;
-    width: 100%;
-    min-height: 88px;
+  .scene-hint {
+    top: 16px;
+    bottom: auto;
+    left: 16px;
+    width: min(280px, calc(100% - 120px));
     padding: 14px 16px;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    justify-items: start;
-    gap: 14px;
-    transform: none;
-    border-radius: 24px;
-    border: 1px solid rgba(126, 192, 255, 0.12);
-    background:
-      radial-gradient(circle at 14% 30%, color-mix(in srgb, var(--planet-accent) 16%, transparent), transparent 24%),
-      linear-gradient(180deg, rgba(6, 14, 30, 0.84), rgba(4, 9, 20, 0.96));
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
   }
 
-  .planet-node:hover,
-  .planet-node:focus-visible {
-    transform: none;
+  .scene-hint p {
+    line-height: 1.55;
   }
 
-  .planet-node__halo {
-    width: 84px;
-    height: 84px;
-    inset: auto;
-    left: 44px;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.56;
-  }
-
-  .planet-node__ring {
-    inset: auto;
-    left: 44px;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 72px !important;
-    height: 72px !important;
-    opacity: 0.32;
-  }
-
-  .planet-node__badge {
-    width: 56px !important;
-    height: 56px !important;
-  }
-
-  .planet-node__label {
-    text-align: left;
-    max-width: none;
-  }
-
-  .planet-node__label strong {
-    font-size: 0.96rem;
-  }
-
-  .planet-node__label span {
-    margin-top: 5px;
-    font-size: 0.64rem;
-    line-height: 1.5;
+  .scene-zoom {
+    top: 16px;
+    right: 16px;
+    bottom: auto;
   }
 
   .universe-brief,
   .detail-panel {
-    left: max(12px, var(--safe-left));
-    right: max(12px, var(--safe-right));
     width: auto;
-    top: auto;
-    bottom: calc(12px + var(--safe-bottom));
+    max-width: none;
   }
 
-  .detail-panel {
+  .universe-brief {
     position: fixed;
-    max-height: min(72svh, 560px);
-    padding: 12px 16px 18px;
-    border-radius: 24px 24px 20px 20px;
+    left: max(12px, var(--safe-left));
+    right: max(12px, var(--safe-right));
+    top: auto;
+    bottom: calc(12px + var(--safe-bottom));
+    max-height: min(62svh, 520px);
     overflow: auto;
     overscroll-behavior: contain;
     z-index: 30;
   }
 
-  .detail-panel__handle {
-    display: block;
-    width: 48px;
-    height: 5px;
-    margin: 0 auto 12px;
-    border-radius: 999px;
-    background: rgba(181, 214, 255, 0.22);
-  }
-
-  .detail-panel h3 {
-    font-size: clamp(1.55rem, 7vw, 2.1rem);
+  .detail-panel {
+    right: 16px;
+    left: auto;
+    top: 16px;
+    max-height: calc(100% - 32px);
   }
 
   .detail-panel__actions {
@@ -1777,24 +1876,21 @@ a {
     width: 100%;
   }
 
-  .universe-brief,
-  .detail-panel {
-    width: 100%;
-  }
-
-  .intro-overlay__panel {
-    width: calc(100vw - 32px);
-    max-width: calc(100vw - 32px);
-    padding: 22px 18px 20px;
-    border-radius: 28px;
-  }
-
   .intro-overlay {
     padding:
       calc(14px + var(--safe-top))
       max(12px, var(--safe-right))
       calc(14px + var(--safe-bottom))
       max(12px, var(--safe-left));
+  }
+
+  .intro-overlay__panel {
+    width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px);
+    max-height: calc(100svh - 28px - var(--safe-top) - var(--safe-bottom));
+    overflow: auto;
+    padding: 22px 18px 20px;
+    border-radius: 28px;
   }
 
   .intro-overlay__title {
@@ -1814,6 +1910,39 @@ a {
     line-height: 1.7;
   }
 
+  .intro-mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .intro-mode-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-card {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .mode-card strong {
+    margin-top: 8px;
+    font-size: 1rem;
+  }
+
+  .mode-card p {
+    display: none;
+  }
+
+  .mode-card__footer,
+  .intro-overlay__copy,
+  .intro-overlay__detail {
+    display: none;
+  }
+
+  .intro-mode-panel__copy {
+    display: none;
+  }
+
   .intro-overlay__actions {
     flex-direction: column;
   }
@@ -1828,34 +1957,895 @@ a {
     transform: scale(1.01);
   }
 
-  .app-shell[data-phase="galaxy"] .command-core,
-  .app-shell[data-phase="galaxy"] .universe-layer,
-  .app-shell[data-phase="galaxy"] .universe-focus-card {
+  .app-shell[data-interface-mode="pc"] .scene-stage {
+    min-height: calc(100svh - 148px);
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__rings {
+    inset: -40px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__rings span:nth-child(1) {
+    width: 220px;
+    height: 220px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__rings span:nth-child(2) {
+    width: 280px;
+    height: 280px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__rings span:nth-child(3) {
+    width: 340px;
+    height: 340px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__shell {
+    width: min(154px, 42vw);
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__text {
+    max-width: 220px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__text strong {
+    font-size: 1rem;
+  }
+
+  .app-shell[data-interface-mode="pc"] .command-core__text span {
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node {
+    width: 132px;
+    gap: 10px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__rings span:nth-child(1) {
+    width: 82px;
+    height: 82px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__rings span:nth-child(2) {
+    width: 112px;
+    height: 112px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__rings span:nth-child(3) {
+    width: 142px;
+    height: 142px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__orb {
+    width: 70px;
+    height: 70px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__visual {
+    width: 94px;
+    height: 94px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__label strong {
+    font-size: 0.84rem;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__label span {
+    font-size: 0.67rem;
+    line-height: 1.35;
+  }
+
+  .app-shell[data-interface-mode="pc"] .universe-focus-card {
+    right: 16px;
+    bottom: 16px;
+    width: min(300px, calc(100% - 32px));
+    padding: 18px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .universe-focus-card__header h3 {
+    font-size: 1.45rem;
+  }
+
+  .app-shell[data-interface-mode="pc"] .focus-galaxy__visual {
+    width: 260px;
+    height: 260px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .focus-galaxy__core {
+    width: min(300px, calc(100% - 32px));
+    padding: 22px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .focus-galaxy__core-copy h2 {
+    font-size: clamp(1.9rem, 7vw, 2.7rem);
+  }
+
+  .app-shell[data-interface-mode="pc"] .planet-node__label {
+    max-width: 112px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .planet-node__label strong {
+    font-size: 0.74rem;
+  }
+
+  .app-shell[data-interface-mode="pc"] .planet-node__label span {
+    font-size: 0.6rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .site-footer {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-shell {
+    min-height: calc(100svh - 116px);
+    height: calc(100dvh - 116px);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-stage {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 16px;
+    min-height: calc(100svh - 116px);
+    height: calc(100dvh - 116px);
+    overscroll-behavior: contain;
+    touch-action: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .universe-camera,
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .universe-focus-card,
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .focus-layer {
+    position: relative;
+    inset: auto;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .universe-brief {
+    display: none !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-hint {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-camera {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 14px;
+    align-content: start;
+    padding-top: 16px;
+    inset: auto;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .universe-camera {
+    padding-top: 136px;
+    padding-bottom: 24px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    gap: 12px;
+    padding-top: 8px;
+    transform: none !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings {
+    inset: -36px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings span:nth-child(1) {
+    width: 206px;
+    height: 206px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings span:nth-child(2) {
+    width: 254px;
+    height: 254px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings span:nth-child(3) {
+    width: 306px;
+    height: 306px;
+    opacity: 0.24;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__shell {
+    width: min(148px, 48vw);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__text {
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__text strong {
+    font-size: 1.18rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__text span {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-layer {
+    z-index: 6;
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding: 2px 2px 6px;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    scrollbar-width: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-layer::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node {
+    position: relative;
+    top: auto;
+    left: auto;
+    flex: 0 0 clamp(148px, 46vw, 184px);
+    min-height: 132px;
+    width: auto;
+    padding: 16px 14px 18px;
+    justify-items: center;
+    align-content: start;
+    gap: 12px;
+    transform: none !important;
+    border-radius: 24px;
+    border: 1px solid rgba(126, 192, 255, 0.12);
+    background:
+      radial-gradient(circle at 14% 30%, rgba(122, 188, 255, 0.14), transparent 28%),
+      linear-gradient(180deg, rgba(6, 14, 30, 0.84), rgba(4, 9, 20, 0.96));
+    box-shadow: var(--shadow-md);
+    scroll-snap-align: start;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__rings {
+    inset: auto;
+    top: 44px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__rings span:nth-child(1) {
+    width: 80px;
+    height: 80px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__rings span:nth-child(2) {
+    width: 100px;
+    height: 100px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__rings span:nth-child(3) {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__orb {
+    width: 66px;
+    height: 66px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__visual {
+    width: 94px;
+    height: 94px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__label strong {
+    font-size: 0.96rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node__label span {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node:hover,
+  .app-shell[data-interface-mode="mobile"] .galaxy-node:focus-visible,
+  .app-shell[data-interface-mode="mobile"] .galaxy-node.is-selected,
+  .app-shell[data-interface-mode="mobile"] .galaxy-node.is-focused {
+    transform: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node.is-focused {
+    border-color: color-mix(in srgb, var(--galaxy-accent) 38%, rgba(126, 192, 255, 0.18));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--galaxy-accent) 28%, transparent),
+      0 20px 44px rgba(0, 7, 22, 0.54);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-focus-card {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 16px;
+    bottom: auto;
+    width: auto;
+    margin: 0;
+    padding: 16px;
+    z-index: 12;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-focus-card__header h3 {
+    font-size: 1.42rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-focus-card__copy {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-focus-card__actions .scene-button {
+    min-height: 52px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-layer {
+    width: 100%;
+    z-index: 8;
+    opacity: 0;
+    transform: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-scene {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 62px 0 0;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-scene__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .back-control {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-scene__meta {
+    letter-spacing: 0.18em;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__visual {
+    width: min(240px, 58vw);
+    height: min(240px, 58vw);
+    opacity: 0.42;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__mist {
+    filter: blur(28px);
+    opacity: 0.7;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    padding: 22px 18px 18px;
+    border-radius: 26px;
+    transform: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core-rings {
+    inset: -30px;
+    opacity: 0.55;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core-rings span:nth-child(1) {
+    width: 220px;
+    height: 220px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core-rings span:nth-child(2) {
+    width: 280px;
+    height: 280px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core-copy h2 {
+    font-size: clamp(2.1rem, 10vw, 3rem);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core-copy p {
+    line-height: 1.62;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-planets {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-content: stretch;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-planets__header {
+    display: block;
+    padding: 0 4px 4px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-planets__header p {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    min-height: 88px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
+    gap: 14px;
+    transform: none !important;
+    border-radius: 24px;
+    border: 1px solid rgba(126, 192, 255, 0.12);
+    background:
+      radial-gradient(circle at 14% 30%, color-mix(in srgb, var(--planet-accent) 16%, transparent), transparent 24%),
+      linear-gradient(180deg, rgba(6, 14, 30, 0.84), rgba(4, 9, 20, 0.96));
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node:hover,
+  .app-shell[data-interface-mode="mobile"] .planet-node:focus-visible {
+    transform: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__halo {
+    width: 84px;
+    height: 84px;
+    inset: auto;
+    left: 44px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.56;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__ring {
+    inset: auto;
+    left: 44px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 72px !important;
+    height: 72px !important;
+    opacity: 0.32;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__badge {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__label {
+    text-align: left;
+    max-width: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__label strong {
+    font-size: 0.96rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__label span {
+    margin-top: 5px;
+    font-size: 0.64rem;
+    line-height: 1.5;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .detail-panel {
+    position: fixed;
+    left: max(12px, var(--safe-left));
+    right: max(12px, var(--safe-right));
+    top: auto;
+    bottom: calc(12px + var(--safe-bottom));
+    max-height: min(72svh, 560px);
+    padding: 12px 16px 18px;
+    border-radius: 24px 24px 20px 20px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    z-index: 30;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .detail-panel__handle {
+    display: block;
+    width: 48px;
+    height: 5px;
+    margin: 0 auto 12px;
+    border-radius: 999px;
+    background: rgba(181, 214, 255, 0.22);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .detail-panel h3 {
+    font-size: clamp(1.55rem, 7vw, 2.1rem);
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="galaxy"] .universe-camera,
+  .app-shell[data-interface-mode="mobile"][data-phase="galaxy"] .universe-focus-card {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .app-shell[data-interface-mode="mobile"] .site-footer {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .app-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .app-header__actions {
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .header-state {
+    display: inline-flex;
+    width: auto;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-shell,
+  .app-shell[data-interface-mode="mobile"] .scene-stage {
+    min-height: calc(100svh - 100px);
+    height: calc(100dvh - 100px);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-stage {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding: 14px;
+    touch-action: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .universe-camera,
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .universe-focus-card,
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .focus-layer {
+    position: relative;
+    inset: auto;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-stage > .universe-brief {
+    display: none !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .scene-hint {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-camera {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    padding-top: 6px;
+    inset: auto;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    gap: 10px;
+    padding-top: 2px;
+    transform: none !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings {
+    inset: -28px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings span:nth-child(1) {
+    width: 170px;
+    height: 170px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings span:nth-child(2) {
+    width: 210px;
+    height: 210px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__rings span:nth-child(3) {
+    width: 252px;
+    height: 252px;
+    opacity: 0.22;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__shell {
+    width: min(132px, 22vw);
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__text strong {
+    font-size: 1.16rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .command-core__text span {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .universe-layer {
+    z-index: 6;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .universe-camera {
+    grid-template-columns: minmax(210px, 0.8fr) minmax(0, 1fr);
+    grid-template-rows: 1fr;
+    align-items: center;
+    min-height: 0;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .universe-layer {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node {
+    position: relative;
+    top: auto;
+    left: auto;
+    min-height: 118px;
+    width: auto;
+    padding: 14px 12px;
+    justify-items: center;
+    align-content: start;
+    gap: 10px;
+    transform: none !important;
+    border-radius: 22px;
+    border: 1px solid rgba(126, 192, 255, 0.12);
+    background:
+      radial-gradient(circle at 14% 30%, rgba(122, 188, 255, 0.14), transparent 28%),
+      linear-gradient(180deg, rgba(6, 14, 30, 0.84), rgba(4, 9, 20, 0.96));
+    box-shadow: var(--shadow-md);
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__rings {
+    inset: auto;
+    top: 40px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__rings span:nth-child(1) {
+    width: 74px;
+    height: 74px;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__rings span:nth-child(2) {
+    width: 92px;
+    height: 92px;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__rings span:nth-child(3) {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__orb {
+    width: 60px;
+    height: 60px;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__visual {
+    width: 84px;
+    height: 84px;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .galaxy-node__label span {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .universe-focus-card {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    width: min(320px, 42vw);
+    margin: 0;
+    padding: 16px;
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="universe"] .universe-focus-card__copy {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-layer {
+    width: 100%;
+    z-index: 8;
+    opacity: 0;
+    transform: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-scene {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 52px 0 0;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-scene__toolbar {
+    align-items: center;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .back-control {
+    min-height: 44px;
+    width: auto;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__visual {
+    width: min(190px, 24vw);
+    height: min(190px, 24vw);
+    inset: 48% auto auto 22%;
+    opacity: 0.36;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-galaxy__core {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    padding: 18px;
+    transform: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-planets {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    max-height: min(44svh, 290px);
+    overflow: auto;
+    padding-right: 4px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .focus-planets__header {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 0 4px 2px;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node {
+    position: relative;
+    top: auto;
+    left: auto;
+    min-height: 78px;
+    width: 100%;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
+    gap: 12px;
+    transform: none !important;
+    border-radius: 22px;
+    border: 1px solid rgba(126, 192, 255, 0.12);
+    background:
+      radial-gradient(circle at 14% 30%, color-mix(in srgb, var(--planet-accent) 16%, transparent), transparent 24%),
+      linear-gradient(180deg, rgba(6, 14, 30, 0.84), rgba(4, 9, 20, 0.96));
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__halo {
+    width: 74px;
+    height: 74px;
+    inset: auto;
+    left: 38px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.52;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__ring {
+    inset: auto;
+    left: 38px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px !important;
+    height: 64px !important;
+    opacity: 0.3;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__badge {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .planet-node__label span {
+    font-size: 0.6rem;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .detail-panel {
+    position: fixed;
+    left: auto;
+    right: max(12px, var(--safe-right));
+    top: auto;
+    bottom: calc(12px + var(--safe-bottom));
+    width: min(420px, calc(100vw - 28px - var(--safe-left) - var(--safe-right)));
+    max-height: min(82svh, 420px);
+  }
+
+  .app-shell[data-interface-mode="mobile"][data-phase="galaxy"] .universe-camera,
+  .app-shell[data-interface-mode="mobile"][data-phase="galaxy"] .universe-focus-card {
     display: none;
   }
 }
 
 @media (max-width: 520px) {
-  .app-header {
+  .app-header__actions {
     flex-direction: column;
-    align-items: start;
+    align-items: stretch;
   }
 
-  .app-header__brand {
-    width: 100%;
+  .header-state {
+    display: none;
   }
 
   .scene-stage {
-    padding: 18px 14px 22px;
+    min-height: calc(100svh - 132px);
+  }
+
+  .scene-hint {
+    width: min(236px, calc(100% - 106px));
+    padding: 12px 14px;
   }
 
   .command-core__shell {
-    width: min(148px, 50vw);
+    width: min(146px, 50vw);
   }
 
-  .command-core__text strong,
   .universe-focus-card__header h3 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .intro-overlay__title {
@@ -1867,19 +2857,43 @@ a {
     max-width: calc(100vw - 24px);
   }
 
-  .galaxy-node,
-  .planet-node {
+  .intro-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rotate-guidance {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .rotate-guidance__device {
+    width: 62px;
+    height: 62px;
+  }
+
+  .rotate-guidance__frame {
+    width: 36px;
+    height: 60px;
+    inset: 1px auto auto 13px;
+  }
+
+  .app-shell[data-interface-mode="pc"] .galaxy-node__label span {
+    display: none;
+  }
+
+  .app-shell[data-interface-mode="mobile"] .galaxy-node,
+  .app-shell[data-interface-mode="mobile"] .planet-node {
     padding: 13px 14px;
   }
 
-  .detail-panel {
+  .app-shell[data-interface-mode="mobile"] .detail-panel {
     max-height: min(78svh, 560px);
   }
 }
 
 @media (max-height: 760px) and (max-width: 760px) {
   .scene-stage {
-    min-height: calc(100svh - 108px);
+    min-height: calc(100svh - 116px);
   }
 
   .command-core__text span,
@@ -1888,7 +2902,7 @@ a {
     line-height: 1.55;
   }
 
-  .detail-panel {
+  .app-shell[data-interface-mode="mobile"] .detail-panel {
     max-height: min(74svh, 480px);
   }
 }

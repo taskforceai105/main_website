@@ -1,0 +1,33 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="localChip" x1="80" y1="80" x2="240" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B6FFF0"/>
+      <stop offset="1" stop-color="#72FFE5"/>
+    </linearGradient>
+    <radialGradient id="localGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 160) rotate(90) scale(120)">
+      <stop stop-color="#72FFE5" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#06121C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="160" cy="160" r="114" fill="url(#localGlow)"/>
+  <rect x="98" y="98" width="124" height="124" rx="26" stroke="url(#localChip)" stroke-width="8"/>
+  <rect x="126" y="126" width="68" height="68" rx="16" fill="#0B1A22" stroke="#B8FFF4" stroke-opacity="0.74" stroke-width="6"/>
+  <g stroke="#82FFE8" stroke-width="6" stroke-linecap="round">
+    <path d="M126 72V98"/>
+    <path d="M160 64V98"/>
+    <path d="M194 72V98"/>
+    <path d="M126 222V248"/>
+    <path d="M160 222V256"/>
+    <path d="M194 222V248"/>
+    <path d="M72 126H98"/>
+    <path d="M64 160H98"/>
+    <path d="M72 194H98"/>
+    <path d="M222 126H248"/>
+    <path d="M222 160H256"/>
+    <path d="M222 194H248"/>
+  </g>
+  <g stroke="#B8FFF4" stroke-opacity="0.34" stroke-width="4">
+    <path d="M112 112L208 208"/>
+    <path d="M208 112L112 208"/>
+  </g>
+</svg>

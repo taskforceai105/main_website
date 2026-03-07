@@ -1,11 +1,30 @@
 # Next Steps
 
 Note:
-The current codebase now has a mobile-specific responsive pass. Future sessions should verify/polish it on real devices rather than assuming mobile is still in its old broken state.
+The current codebase now has an explicit `PC` vs `Mobile` mode split, a tighter mobile-first responsive pass, local galaxy visuals, and a basic outbound-resource audit. Future sessions should verify/polish that work on real devices rather than assuming the old mobile state still exists.
 
 ## Must-Haves
 
-### 1. Reduce universe-level clutter
+### 1. Finalize mobile viewport fitting
+
+Priority: Highest
+
+Goal:
+Finish the remaining mobile polish so portrait and rotated-phone views feel fully deliberate instead of just mostly corrected.
+
+Acceptance criteria:
+
+- Intro title, mode cards, rotate guidance, and CTA all fit comfortably on modern phone sizes.
+- Mobile universe focus metadata remains visible without awkward scrolling.
+- Low-height landscape mobile framing feels intentional, not like desktop squeezed into a short window.
+- Tool detail panels stay fully inside the viewport in portrait and landscape.
+
+Regression warnings:
+
+- Do not collapse Mobile mode back into the PC composition.
+- Do not reintroduce floating overlap between the hub, labels, and metadata panels.
+
+### 2. Reduce universe-level clutter
 
 Priority: Highest
 
@@ -24,7 +43,7 @@ Regression warnings:
 - Do not turn the universe view into a dense dashboard.
 - Do not add persistent panels that fight the map for attention.
 
-### 2. Strengthen the intro overlay
+### 3. Strengthen the intro overlay
 
 Priority: High
 
@@ -43,7 +62,7 @@ Regression warnings:
 - Do not overload the intro with long explanations.
 - Do not create an intro that traps the user or blocks recovery.
 
-### 3. Improve universe -> galaxy drilldown transitions
+### 4. Improve universe -> galaxy drilldown transitions
 
 Priority: High
 
@@ -62,7 +81,7 @@ Regression warnings:
 - Do not remove the clear back path to universe view.
 - Do not break the current transition lock/state flow in `scripts/app.js`.
 
-### 4. Improve node/logo presentation
+### 5. Improve node/logo presentation
 
 Priority: High
 
@@ -81,7 +100,7 @@ Regression warnings:
 - Do not hotlink fragile assets into production casually.
 - Do not mix inconsistent logo treatments that make the galaxy feel amateurish.
 
-### 5. Refine content/data structure
+### 6. Refine content/data structure
 
 Priority: Medium
 
@@ -98,7 +117,7 @@ Regression warnings:
 
 - Do not hard-code lots of copy directly into `components.js` or `app.js`.
 
-### 6. Preserve performance and Netlify compatibility
+### 7. Preserve performance and Netlify compatibility
 
 Priority: Medium
 
@@ -119,13 +138,16 @@ Regression warnings:
 ## Nice-To-Haves
 
 - Add a more dramatic galaxy-selection visual accent without increasing clutter.
-- Polish the new mobile galaxy rail/focus-card and bottom-sheet behaviors after real-device review.
+- Polish the new mobile galaxy focus card, landscape framing, and bottom-sheet behaviors after real-device review.
+- Add a more explicit in-app way to reopen the mode selector from every state if the current header affordance still feels too subtle on touch devices.
 - Audit whether unused legacy assets/files in `docs/` should be cleaned up in a future focused pass.
 - Add a clearer content-editing note for non-code maintainers if the structured data grows.
 
 ## Do Not Regress
 
 - Intro -> universe -> galaxy -> detail hierarchy
+- Explicit `PC` vs `Mobile` mode separation
+- Mobile-only rotate guidance staying mobile-only
 - Closable overlays and panels
 - Dark cinematic style
 - Clean universe-level presentation

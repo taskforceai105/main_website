@@ -1,0 +1,34 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="llmCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 160) rotate(90) scale(120)">
+      <stop stop-color="#D8F1FF" stop-opacity="0.96"/>
+      <stop offset="0.45" stop-color="#74BEFF" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#060E1E" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="llmGlow" x="0" y="0" width="320" height="320" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+  <circle cx="160" cy="160" r="110" stroke="#7EC7FF" stroke-opacity="0.24"/>
+  <circle cx="160" cy="160" r="80" stroke="#A8DEFF" stroke-opacity="0.32" stroke-dasharray="10 14"/>
+  <circle cx="160" cy="160" r="56" fill="url(#llmCore)"/>
+  <g stroke="#8FD5FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M88 114L160 160L232 114"/>
+    <path d="M88 206L160 160L232 206"/>
+    <path d="M112 84L160 160L208 84"/>
+    <path d="M112 236L160 160L208 236"/>
+  </g>
+  <g stroke="#D7F2FF" stroke-opacity="0.74" stroke-width="4">
+    <path d="M138 160C138 145 150 133 165 133C180 133 192 145 192 160"/>
+    <path d="M126 160C126 138 144 120 166 120C188 120 206 138 206 160"/>
+    <path d="M138 160C138 175 150 187 165 187C180 187 192 175 192 160"/>
+  </g>
+  <g filter="url(#llmGlow)" opacity="0.52">
+    <circle cx="102" cy="114" r="12" fill="#9DE0FF"/>
+    <circle cx="160" cy="82" r="10" fill="#74BEFF"/>
+    <circle cx="220" cy="114" r="12" fill="#9DE0FF"/>
+    <circle cx="102" cy="206" r="12" fill="#8EC6FF"/>
+    <circle cx="220" cy="206" r="12" fill="#A4E6FF"/>
+    <circle cx="160" cy="238" r="10" fill="#77B7FF"/>
+  </g>
+</svg>

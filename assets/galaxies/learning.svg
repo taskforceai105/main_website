@@ -1,0 +1,22 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="learnOrbit" x1="96" y1="74" x2="232" y2="246" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE7A6"/>
+      <stop offset="1" stop-color="#FFD97F"/>
+    </linearGradient>
+    <radialGradient id="learnGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 160) rotate(90) scale(118)">
+      <stop stop-color="#FFD97F" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#150F05" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="160" cy="160" r="110" fill="url(#learnGlow)"/>
+  <path d="M82 184C104 122 148 92 202 90C224 90 244 96 258 108" stroke="url(#learnOrbit)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M66 144C88 94 132 62 188 62C228 62 262 78 284 106" stroke="#FFE7A6" stroke-opacity="0.3" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="214" cy="108" r="14" fill="#FFE7A6"/>
+  <path d="M102 124L160 96L218 124V196L160 224L102 196V124Z" stroke="#FFD97F" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M160 96V224" stroke="#FFD97F" stroke-opacity="0.42" stroke-width="4"/>
+  <path d="M102 124L160 152L218 124" stroke="#FFEFC2" stroke-opacity="0.72" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="160" cy="152" r="20" fill="#FFE9B2"/>
+  <path d="M148 152H172" stroke="#8F6D12" stroke-width="5" stroke-linecap="round"/>
+  <path d="M160 140V164" stroke="#8F6D12" stroke-width="5" stroke-linecap="round"/>
+</svg>

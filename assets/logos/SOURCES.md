@@ -14,5 +14,9 @@ Local logo files in this directory are used to avoid fragile remote hotlinks in 
 - `ggml-org.png`: `https://github.com/ggml-org.png?size=200`
 - `google-gemini.png`: `https://github.com/google-gemini.png?size=200`
 - `google.png`: `https://blog.google/static/blogv2/images/google-1000x1000.png?version=pr20260219-1731`
+- `github.svg`: `https://github.githubassets.com/favicons/favicon.svg`
+- `elicit.ico`: `https://elicit.com/favicon.ico`
+- `runway.ico`: `https://runwayml.com/favicon.ico`
+- `lmstudio.ico`: `https://lmstudio.ai/favicon.ico`
 
 Nodes without a clean, reliable public product asset use deliberate monogram fallbacks defined in `scripts/data/logo-sources.js`.

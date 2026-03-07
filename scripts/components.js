@@ -1,4 +1,4 @@
-import { logoCatalog } from "./data/logo-sources.js";
+import { galaxyVisualCatalog, logoCatalog } from "./data/logo-sources.js";
 
 const escapeHtml = (value) =>
   String(value)
@@ -47,6 +47,20 @@ const renderIntroTitle = (title) => {
   return `<span>${escapeHtml(title)}</span>`;
 };
 
+const renderGalaxyVisual = (galaxy) => {
+  const visual = galaxyVisualCatalog[galaxy.visualKey ?? galaxy.id];
+
+  if (!visual) {
+    return "";
+  }
+
+  return `
+    <span class="galaxy-node__visual" aria-hidden="true">
+      <img src="${visual.src}" alt="${escapeHtml(visual.alt)}" />
+    </span>
+  `;
+};
+
 const renderGalaxyNode = (galaxy) => `
   <button
     class="galaxy-node"
@@ -61,6 +75,7 @@ const renderGalaxyNode = (galaxy) => `
       <span></span>
     </span>
     <span class="galaxy-node__orb" aria-hidden="true"></span>
+    ${renderGalaxyVisual(galaxy)}
     <span class="galaxy-node__label">
       <strong>${escapeHtml(galaxy.title)}</strong>
       <span>${escapeHtml(galaxy.subtitle)}</span>
@@ -68,7 +83,7 @@ const renderGalaxyNode = (galaxy) => `
   </button>
 `;
 
-export const renderUniverseFocusPanel = (galaxy) => `
+export const renderUniverseFocusPanel = (galaxy, mode) => `
   <div class="universe-focus-card__header">
     <div>
       <span class="panel-kicker">Galaxy Focus</span>
@@ -78,9 +93,16 @@ export const renderUniverseFocusPanel = (galaxy) => `
   </div>
   <p class="universe-focus-card__subtitle">${escapeHtml(galaxy.subtitle)}</p>
   <p class="universe-focus-card__copy">${escapeHtml(galaxy.why)}</p>
+  <p class="universe-focus-card__hint">
+    ${
+      mode === "mobile"
+        ? "Tap launch to zoom into this galaxy."
+        : "Click again, use Enter, or zoom in to enter this galaxy."
+    }
+  </p>
   <div class="universe-focus-card__actions">
     <button class="scene-button" type="button" data-enter-focused-galaxy>
-      ${escapeHtml(`Enter ${galaxy.title}`)}
+      ${escapeHtml(mode === "mobile" ? `Open ${galaxy.title}` : `Enter ${galaxy.title}`)}
     </button>
   </div>
 `;
@@ -117,13 +139,16 @@ export const renderHeader = (content) => `
       </div>
     </div>
     <div class="app-header__actions">
+      <button class="header-chip header-chip--mode" type="button" data-open-mode>
+        Choose Interface
+      </button>
       <button class="header-chip" type="button" data-open-brief>Universe Brief</button>
       <span class="header-state" data-header-state>${escapeHtml(content.subtitle)}</span>
     </div>
   </header>
 `;
 
-export const renderIntroOverlay = (content) => `
+export const renderIntroOverlay = (content, modes) => `
   <div class="intro-overlay" data-intro-overlay>
     <div class="intro-overlay__backdrop"></div>
     <div class="intro-overlay__panel">
@@ -132,11 +157,42 @@ export const renderIntroOverlay = (content) => `
       <p class="intro-overlay__subtitle">${escapeHtml(content.subtitle)}</p>
       <p class="intro-overlay__copy">${escapeHtml(content.teaser)}</p>
       <p class="intro-overlay__detail">${escapeHtml(content.introPrompt)}</p>
+      <div class="intro-mode-grid">
+        ${Object.values(modes)
+          .map(
+            (mode) => `
+              <button class="mode-card" type="button" data-select-mode="${mode.id}">
+                <span class="mode-card__eyebrow">${escapeHtml(mode.eyebrow)}</span>
+                <strong>${escapeHtml(mode.title)}</strong>
+                <p>${escapeHtml(mode.summary)}</p>
+                <span class="mode-card__footer">${escapeHtml(mode.recommendation)}</span>
+              </button>
+            `,
+          )
+          .join("")}
+      </div>
+      <div class="intro-mode-panel" data-mode-panel>
+        <div class="intro-mode-panel__copy">
+          <span class="panel-kicker" data-mode-panel-kicker>Interface Profile</span>
+          <h3 data-mode-panel-title>Select a command view</h3>
+          <p data-mode-panel-copy>Choose PC or Mobile to load the interface profile that fits your device and control style.</p>
+        </div>
+        <div class="rotate-guidance" data-rotate-guidance hidden>
+          <span class="rotate-guidance__device" aria-hidden="true">
+            <span class="rotate-guidance__frame"></span>
+            <span class="rotate-guidance__glow"></span>
+          </span>
+          <div>
+            <p class="rotate-guidance__title" data-rotate-title></p>
+            <p class="rotate-guidance__copy" data-rotate-copy></p>
+          </div>
+        </div>
+      </div>
       <div class="intro-overlay__actions">
-        <button class="scene-button" type="button" data-enter-universe>
+        <button class="scene-button" type="button" data-enter-universe disabled>
           ${escapeHtml(content.enterLabel)}
         </button>
-        <button class="scene-button scene-button--ghost" type="button" data-skip-intro>
+        <button class="scene-button scene-button--ghost" type="button" data-use-recommended>
           ${escapeHtml(content.skipLabel)}
         </button>
       </div>
@@ -155,7 +211,7 @@ export const renderUniverseBrief = (content) => `
   </aside>
 `;
 
-export const renderScene = (content, galaxies) => `
+export const renderScene = (content, galaxies, modes) => `
   <main class="scene-shell">
     <section class="scene-stage" data-scene-stage>
       ${renderStarLayer(120, "deep")}
@@ -167,27 +223,31 @@ export const renderScene = (content, galaxies) => `
       <div class="scene-vignette" aria-hidden="true"></div>
       <div class="scene-grid" aria-hidden="true"></div>
       <div class="scene-travel" aria-hidden="true"></div>
+      <aside class="scene-hint" data-scene-hint hidden></aside>
+      <div class="scene-zoom" data-scene-zoom hidden></div>
 
-      <div class="command-core" data-command-core>
-        <span class="command-core__rings" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
-        <div class="command-core__shell">
-          <div class="command-core__logo-wrap">
-            <img src="assets/det105.png" alt="Det 105 AI Task Force logo" class="command-core__logo" />
+      <div class="universe-camera" data-universe-camera>
+        <div class="command-core" data-command-core>
+          <span class="command-core__rings" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+          <div class="command-core__shell">
+            <div class="command-core__logo-wrap">
+              <img src="assets/det105.png" alt="Det 105 AI Task Force logo" class="command-core__logo" />
+            </div>
+          </div>
+          <div class="command-core__text">
+            <p>Det 105 Command Core</p>
+            <strong>AI Universe Hub</strong>
+            <span>Central identity node for galaxy-scale exploration.</span>
           </div>
         </div>
-        <div class="command-core__text">
-          <p>Det 105 Command Core</p>
-          <strong>AI Universe Hub</strong>
-          <span>Central identity node for galaxy-scale exploration.</span>
-        </div>
-      </div>
 
-      <div class="universe-layer" data-universe-layer>
-        ${galaxies.map(renderGalaxyNode).join("")}
+        <div class="universe-layer" data-universe-layer>
+          ${galaxies.map(renderGalaxyNode).join("")}
+        </div>
       </div>
 
       <aside class="universe-focus-card" data-universe-focus hidden></aside>
@@ -199,11 +259,11 @@ export const renderScene = (content, galaxies) => `
       <aside class="detail-panel" data-detail-panel hidden></aside>
     </section>
 
-    ${renderIntroOverlay(content)}
+    ${renderIntroOverlay(content, modes)}
   </main>
 `;
 
-export const renderFocusScene = (galaxy) => `
+export const renderFocusScene = (galaxy, mode) => `
   <div
     class="focus-scene"
     style="--focus-accent:${galaxy.accent}; --focus-accent-soft:${galaxy.accentSoft};"
@@ -219,6 +279,9 @@ export const renderFocusScene = (galaxy) => `
       <span class="focus-galaxy__mist focus-galaxy__mist--a" aria-hidden="true"></span>
       <span class="focus-galaxy__mist focus-galaxy__mist--b" aria-hidden="true"></span>
       <span class="focus-galaxy__mist focus-galaxy__mist--c" aria-hidden="true"></span>
+      <div class="focus-galaxy__visual" aria-hidden="true">
+        <img src="${galaxyVisualCatalog[galaxy.visualKey ?? galaxy.id]?.src ?? ""}" alt="" />
+      </div>
       <div class="focus-galaxy__core">
         <span class="focus-galaxy__core-rings" aria-hidden="true">
           <span></span>
@@ -234,7 +297,11 @@ export const renderFocusScene = (galaxy) => `
       <div class="focus-planets">
         <div class="focus-planets__header">
           <span class="panel-kicker">Tool Orbit</span>
-          <p>Tap a tool node to open its briefing.</p>
+          <p>${
+            mode === "mobile"
+              ? "Tap a tool node to open its briefing."
+              : "Click a tool node to inspect it, or wheel out to retreat to the universe."
+          }</p>
         </div>
         ${galaxy.planets.map((planet) => renderPlanetNode(planet, galaxy.accent)).join("")}
       </div>
@@ -242,7 +309,7 @@ export const renderFocusScene = (galaxy) => `
   </div>
 `;
 
-export const renderDetailPanel = ({ galaxy, planet }) => {
+export const renderDetailPanel = ({ galaxy, planet, mode }) => {
   const isPlanet = Boolean(planet);
   const title = isPlanet ? planet.name : galaxy.focusTitle;
   const typeLine = isPlanet ? `${galaxy.title} / ${planet.type}` : galaxy.subtitle;
@@ -263,6 +330,13 @@ export const renderDetailPanel = ({ galaxy, planet }) => {
       <span>Why it matters</span>
       <p>${escapeHtml(why)}</p>
     </div>
+    <p class="detail-panel__mode-hint">
+      ${
+        mode === "mobile"
+          ? "Use Close or Back to return to the galaxy view."
+          : "Use Close, Back to galaxy, or Escape to dismiss this briefing."
+      }
+    </p>
     <div class="detail-panel__actions">
       ${
         href
@@ -286,3 +360,35 @@ export const renderFooter = (content) => `
     </div>
   </footer>
 `;
+
+export const renderSceneHint = (modeConfig, phase, galaxy) => {
+  if (!modeConfig || phase === "intro") {
+    return "";
+  }
+
+  const copy =
+    phase === "galaxy" ? modeConfig.galaxyHint : galaxy ? modeConfig.universeHint : modeConfig.introHint;
+
+  return `
+    <span class="panel-kicker">${escapeHtml(modeConfig.label)} Mode</span>
+    <p>${escapeHtml(copy)}</p>
+  `;
+};
+
+export const renderZoomControls = (mode, phase, hasFocusedGalaxy) => {
+  if (!mode || phase === "intro") {
+    return "";
+  }
+
+  return `
+    <button class="zoom-control" type="button" data-zoom-out aria-label="Zoom out">
+      -
+    </button>
+    <span class="zoom-control__label">${escapeHtml(
+      phase === "galaxy" ? "Galaxy" : hasFocusedGalaxy ? "Focused" : "Overview",
+    )}</span>
+    <button class="zoom-control" type="button" data-zoom-in aria-label="Zoom in">
+      +
+    </button>
+  `;
+};
