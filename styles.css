@@ -3766,3 +3766,211 @@ a {
     max-height: min(72svh, 360px);
   }
 }
+
+.mark-badge {
+  overflow: hidden;
+  position: relative;
+}
+
+.mark-badge--light {
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.22) 28%, transparent 52%),
+    linear-gradient(180deg, rgba(244, 248, 255, 0.92), rgba(193, 216, 255, 0.76));
+  border-color: rgba(204, 229, 255, 0.42);
+  box-shadow:
+    inset 0 0 18px rgba(255, 255, 255, 0.4),
+    0 14px 30px rgba(1, 5, 16, 0.38);
+}
+
+.mark-badge--dark {
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.16), transparent 24%),
+    linear-gradient(180deg, rgba(10, 24, 50, 0.96), rgba(4, 9, 21, 0.98));
+}
+
+.mark-badge--clear {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(11, 28, 60, 0.68), rgba(6, 12, 25, 0.9));
+  border-color: rgba(165, 221, 255, 0.3);
+}
+
+.mark-badge__mono {
+  color: #07142c;
+}
+
+.mark-badge--dark .mark-badge__mono,
+.mark-badge--clear .mark-badge__mono {
+  color: var(--text);
+}
+
+.mark-badge__mono[hidden] {
+  display: none;
+}
+
+.desktop-universe__core {
+  top: var(--core-y);
+  left: var(--core-x);
+}
+
+.desktop-universe__core-shell {
+  width: 152px;
+  height: 152px;
+}
+
+.desktop-universe__core-rings span:nth-child(1) {
+  width: 220px;
+  height: 220px;
+}
+
+.desktop-universe__core-rings span:nth-child(2) {
+  width: 300px;
+  height: 300px;
+}
+
+.desktop-universe__core-rings span:nth-child(3) {
+  width: 400px;
+  height: 400px;
+}
+
+.desktop-region {
+  opacity: 0.94;
+}
+
+.desktop-region__halo {
+  border-color: color-mix(in srgb, var(--region-accent) 18%, transparent);
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--region-accent) 12%, transparent), transparent 68%);
+  box-shadow: inset 0 0 80px color-mix(in srgb, var(--region-accent) 8%, transparent);
+}
+
+.desktop-region__label {
+  top: 50%;
+  left: 50%;
+  transform: translate(var(--region-label-x), var(--region-label-y));
+  padding: 10px 14px 12px;
+  border-radius: 18px;
+  background: rgba(6, 13, 28, 0.54);
+  backdrop-filter: blur(8px);
+}
+
+.desktop-region__label span {
+  font-size: 0.68rem;
+}
+
+.desktop-region__label strong {
+  font-size: 1.02rem;
+}
+
+.desktop-connection {
+  stroke: rgba(126, 192, 255, 0.11);
+  stroke-width: calc(0.8px + (var(--connection-weight) - 0.8) * 1.1);
+  stroke-dasharray: 4 12;
+  opacity: 0.62;
+}
+
+.desktop-connection.is-cross-region {
+  stroke-dasharray: 3 14;
+  opacity: 0.5;
+}
+
+.desktop-connection.is-active {
+  stroke: rgba(132, 255, 231, 0.46);
+  opacity: 1;
+}
+
+.desktop-node {
+  gap: 9px;
+}
+
+.desktop-node__halo {
+  width: 132px;
+  height: 132px;
+  opacity: 0.84;
+}
+
+.desktop-node__ring {
+  width: 86px;
+  height: 86px;
+}
+
+.desktop-node__label {
+  padding: 4px 8px 0;
+}
+
+.desktop-node__label strong {
+  text-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.desktop-node--primary .desktop-node__badge {
+  width: 78px;
+  height: 78px;
+}
+
+.desktop-node--primary .desktop-node__ring {
+  width: 108px;
+  height: 108px;
+}
+
+.desktop-node--primary .desktop-node__label strong {
+  font-size: 0.98rem;
+}
+
+.desktop-node--major .desktop-node__badge {
+  width: 68px;
+  height: 68px;
+}
+
+.desktop-node--major .desktop-node__ring {
+  width: 94px;
+  height: 94px;
+}
+
+.desktop-node--support .desktop-node__badge {
+  width: 58px;
+  height: 58px;
+}
+
+.desktop-node--support .desktop-node__ring {
+  width: 78px;
+  height: 78px;
+}
+
+.desktop-node--compact .desktop-node__label span {
+  display: none;
+}
+
+.desktop-node--compact .desktop-node__label strong {
+  font-size: 0.74rem;
+}
+
+.desktop-node--light .desktop-node__ring {
+  border-color: color-mix(in srgb, white 56%, var(--node-accent) 22%);
+}
+
+.desktop-node--light .desktop-node__halo {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 72%);
+}
+
+.desktop-node--clear .desktop-node__halo {
+  background: radial-gradient(circle, color-mix(in srgb, var(--node-accent) 24%, rgba(255, 255, 255, 0.1)), transparent 72%);
+}
+
+.desktop-node.is-related {
+  opacity: 0.96;
+}
+
+.desktop-node.is-selected .desktop-node__label strong,
+.desktop-node.is-related .desktop-node__label strong {
+  color: #ffffff;
+}
+
+.desktop-node.is-selected .desktop-node__halo {
+  opacity: 1;
+  filter: blur(20px);
+}
+
+.desktop-universe__summary {
+  max-width: 360px;
+  font-size: 0.96rem;
+}

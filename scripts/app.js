@@ -9,6 +9,7 @@ import {
   renderSceneHint,
 } from "./components.js";
 import {
+  desktopUniverseCore,
   desktopUniverseDimensions,
   desktopUniverseNodes,
   desktopUniverseRegions,
@@ -103,6 +104,7 @@ let detailHideTimer;
 let desktopViewport;
 let desktopPlane;
 let bootTimers = [];
+let suppressDesktopClickUntil = 0;
 
 const detectDeviceMode = () => {
   if (typeof window === "undefined") {
@@ -233,8 +235,10 @@ const focusDesktopNode = (nodeId) => {
   }
 
   const targetScale = Math.min(desktopMaxScale, Math.max(desktopFocusScale, appState.desktopView.scale));
-  const x = (desktopUniverseDimensions.width / 2 - node.x) * targetScale;
-  const y = (desktopUniverseDimensions.height / 2 - node.y) * targetScale;
+  const focusTargetX = desktopUniverseDimensions.width * 0.42;
+  const focusTargetY = desktopUniverseDimensions.height * 0.48;
+  const x = (focusTargetX - node.x) * targetScale;
+  const y = (focusTargetY - node.y) * targetScale;
 
   appState.selectedToolId = nodeId;
   appState.desktopView = clampDesktopView({
@@ -245,9 +249,7 @@ const focusDesktopNode = (nodeId) => {
   updateScene();
 };
 
-const closeDetailPanel = (immediate = false) => {
-  appState.selectedToolId = null;
-
+const hideDetailPanel = (immediate = false) => {
   if (!detailPanel) {
     return;
   }
@@ -268,16 +270,21 @@ const closeDetailPanel = (immediate = false) => {
   detailHideTimer = window.setTimeout(hide, panelTransitionDuration);
 };
 
+const clearSelectedTool = (immediate = false) => {
+  appState.selectedToolId = null;
+  hideDetailPanel(immediate);
+};
+
 const toggleFullscreen = async () => {
   if (!document.fullscreenEnabled) {
     return;
   }
 
   try {
-    if (document.fullscreenElement) {
+    if (document.fullscreenElement === rootElement) {
       await document.exitFullscreen();
     } else {
-      await sceneStage?.requestFullscreen?.({ navigationUI: "hide" });
+      await rootElement?.requestFullscreen?.({ navigationUI: "hide" });
     }
   } catch {
     // Continue gracefully when fullscreen is blocked or unsupported.
@@ -290,8 +297,8 @@ const tryEnterFullscreen = async () => {
   }
 
   try {
-    if (!document.fullscreenElement) {
-      await sceneStage?.requestFullscreen?.({ navigationUI: "hide" });
+    if (document.fullscreenElement !== rootElement) {
+      await rootElement?.requestFullscreen?.({ navigationUI: "hide" });
     }
   } catch {
     // Fullscreen is optional for desktop entry.
@@ -329,6 +336,52 @@ const updateHeader = () => {
 
   const selectedNode = getSelectedDesktopNode();
   status.textContent = selectedNode ? `${selectedNode.name} Briefing` : "Interactive AI Universe";
+};
+
+const syncDesktopUniverseState = () => {
+  if (!desktopUniverse?.innerHTML) {
+    return;
+  }
+
+  const selectedNode = getSelectedDesktopNode();
+  const selectedRegionId = selectedNode?.regionId ?? null;
+  const relatedNodeIds = new Set(selectedNode?.relatedNodeIds ?? []);
+
+  desktopUniverse.querySelectorAll("[data-desktop-node]").forEach((button) => {
+    const nodeId = button.dataset.nodeId;
+    button.classList.toggle("is-selected", nodeId === appState.selectedToolId);
+    button.classList.toggle("is-related", nodeId !== appState.selectedToolId && relatedNodeIds.has(nodeId));
+  });
+
+  desktopUniverse.querySelectorAll("[data-region-id]").forEach((region) => {
+    region.classList.toggle("is-active", region.dataset.regionId === selectedRegionId);
+  });
+
+  desktopUniverse.querySelectorAll(".desktop-connection").forEach((line) => {
+    const sourceId = line.getAttribute("data-source-id");
+    const targetId = line.getAttribute("data-target-id");
+    const isActive =
+      Boolean(appState.selectedToolId) && (sourceId === appState.selectedToolId || targetId === appState.selectedToolId);
+    line.classList.toggle("is-active", isActive);
+  });
+
+  const label = desktopUniverse.querySelector(".desktop-map-controls__label");
+  if (label) {
+    label.textContent = selectedNode ? `${selectedNode.name} selected` : `${Math.round(appState.desktopView.scale * 100)}% view`;
+  }
+
+  const fullscreenButton = desktopUniverse.querySelector("[data-toggle-fullscreen]");
+  if (fullscreenButton) {
+    fullscreenButton.textContent = appState.isFullscreen ? "Exit full" : "Fullscreen";
+    fullscreenButton.setAttribute("aria-label", appState.isFullscreen ? "Exit fullscreen" : "Enter fullscreen");
+  }
+
+  const summary = desktopUniverse.querySelector(".desktop-universe__summary");
+  if (summary) {
+    summary.textContent = selectedNode
+      ? `${selectedNode.name} sits inside the ${desktopRegionMap.get(selectedNode.regionId)?.title ?? "AI"} region. Related nodes brighten to reveal nearby ecosystem ties.`
+      : "Mapped AI tools, model ecosystems, and learning fundamentals in one connected command field.";
+  }
 };
 
 const updateUniverseBrief = () => {
@@ -387,7 +440,7 @@ const updateMobileExplorer = () => {
   mobileExplorer.querySelectorAll("[data-mobile-category]").forEach((button) => {
     button.addEventListener("click", () => {
       appState.selectedGalaxyId = button.dataset.galaxyId;
-      closeDetailPanel(true);
+      clearSelectedTool(true);
       updateScene();
     });
   });
@@ -421,30 +474,22 @@ const bindDesktopUniverseEvents = () => {
     toggleFullscreen();
   });
 
-  desktopUniverse?.querySelectorAll("[data-desktop-node]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (appState.pointerDrag.moved) {
-        appState.pointerDrag.moved = false;
-        return;
-      }
-
-      focusDesktopNode(button.dataset.nodeId);
-    });
-  });
-
   desktopViewport?.addEventListener("click", (event) => {
-    if (event.target !== desktopViewport && event.target !== desktopPlane) {
+    if (performance.now() < suppressDesktopClickUntil) {
       return;
     }
 
-    if (appState.pointerDrag.moved) {
-      appState.pointerDrag.moved = false;
+    const nodeButton = event.target.closest("[data-desktop-node]");
+    if (nodeButton) {
+      focusDesktopNode(nodeButton.dataset.nodeId);
       return;
     }
 
     if (appState.selectedToolId) {
-      closeDetailPanel(true);
-      updateScene();
+      clearSelectedTool(true);
+      syncDesktopUniverseState();
+      updateHeader();
+      updateDetailPanel();
     }
   });
 
@@ -507,6 +552,9 @@ const bindDesktopUniverseEvents = () => {
     if (desktopViewport?.hasPointerCapture(event.pointerId)) {
       desktopViewport.releasePointerCapture(event.pointerId);
     }
+    if (appState.pointerDrag.moved) {
+      suppressDesktopClickUntil = performance.now() + 180;
+    }
     window.requestAnimationFrame(() => {
       appState.pointerDrag.moved = false;
     });
@@ -516,6 +564,7 @@ const bindDesktopUniverseEvents = () => {
   desktopViewport?.addEventListener("pointercancel", endDrag);
 
   applyDesktopView();
+  syncDesktopUniverseState();
 };
 
 const updateDesktopUniverse = () => {
@@ -528,22 +577,26 @@ const updateDesktopUniverse = () => {
   desktopUniverse.classList.toggle("is-active", shouldShow);
 
   if (!shouldShow) {
-    desktopUniverse.innerHTML = "";
-    desktopViewport = null;
-    desktopPlane = null;
     return;
   }
 
-  desktopUniverse.innerHTML = renderDesktopUniverse({
-    regions: desktopUniverseRegions,
-    nodes: desktopUniverseNodes,
-    dimensions: desktopUniverseDimensions,
-    selectedNodeId: appState.selectedToolId,
-    isFullscreen: appState.isFullscreen,
-    showBriefToggle: appState.universeBriefOpen,
-  });
+  if (!desktopUniverse.innerHTML) {
+    desktopUniverse.innerHTML = renderDesktopUniverse({
+      core: desktopUniverseCore,
+      regions: desktopUniverseRegions,
+      nodes: desktopUniverseNodes,
+      dimensions: desktopUniverseDimensions,
+      selectedNodeId: appState.selectedToolId,
+      isFullscreen: appState.isFullscreen,
+      showBriefToggle: appState.universeBriefOpen,
+    });
 
-  bindDesktopUniverseEvents();
+    bindDesktopUniverseEvents();
+    return;
+  }
+
+  syncDesktopUniverseState();
+  applyDesktopView();
 };
 
 const updateBootOverlay = () => {
@@ -572,7 +625,7 @@ const updateDetailPanel = () => {
   const isMobileDetail = isMobileMode() && appState.phase === "mobile" && Boolean(appState.selectedToolId);
 
   if (!isDesktopDetail && !isMobileDetail) {
-    closeDetailPanel();
+    hideDetailPanel();
     return;
   }
 
@@ -582,7 +635,7 @@ const updateDetailPanel = () => {
     const node = getSelectedDesktopNode();
     const region = node ? desktopRegionMap.get(node.regionId) ?? null : null;
     if (!node || !region) {
-      closeDetailPanel(true);
+      hideDetailPanel(true);
       return;
     }
 
@@ -601,7 +654,7 @@ const updateDetailPanel = () => {
     const galaxy = getActiveMobileGalaxy();
     const planet = getMobilePlanet();
     if (!galaxy || !planet) {
-      closeDetailPanel(true);
+      hideDetailPanel(true);
       return;
     }
 
@@ -628,8 +681,10 @@ const updateDetailPanel = () => {
   });
 
   const clearSelection = () => {
-    closeDetailPanel();
-    updateScene();
+    clearSelectedTool();
+    syncDesktopUniverseState();
+    updateHeader();
+    updateDetailPanel();
   };
 
   detailPanel.querySelector("[data-close-detail]")?.addEventListener("click", clearSelection);
@@ -663,7 +718,7 @@ const enterMobileExplorer = () => {
   appState.phase = "mobile";
   appState.universeBriefOpen = false;
   appState.selectedGalaxyId = appState.selectedGalaxyId ?? defaultGalaxyId;
-  closeDetailPanel(true);
+  clearSelectedTool(true);
   updateScene();
 };
 
@@ -671,7 +726,7 @@ const enterDesktopUniverse = () => {
   clearBootTimers();
   appState.phase = "desktop";
   appState.universeBriefOpen = false;
-  closeDetailPanel(true);
+  clearSelectedTool(true);
   if (
     appState.desktopView.scale === desktopDefaultScale &&
     appState.desktopView.x === desktopDefaultX &&
@@ -689,7 +744,7 @@ const startDesktopBootSequence = async () => {
 
   appState.transitionLock = true;
   appState.universeBriefOpen = false;
-  closeDetailPanel(true);
+  clearSelectedTool(true);
   await tryEnterFullscreen();
   appState.phase = "boot";
   appState.bootStepIndex = 0;
@@ -738,9 +793,12 @@ const syncDeviceMode = (nextMode) => {
   appState.deviceMode = nextMode;
   appState.universeBriefOpen = false;
   clearBootTimers();
-  closeDetailPanel(true);
+  clearSelectedTool(true);
 
   if (nextMode === "mobile") {
+    if (document.fullscreenElement === rootElement) {
+      document.exitFullscreen().catch(() => {});
+    }
     appState.phase = appState.phase === "intro" ? "intro" : "mobile";
     appState.selectedGalaxyId = appState.selectedGalaxyId ?? defaultGalaxyId;
   } else {
@@ -786,8 +844,8 @@ const applyDebugStateFromUrl = () => {
       const targetNode = desktopNodeMap.get(targetNodeId);
       appState.desktopView = clampDesktopView({
         scale: desktopFocusScale,
-        x: (desktopUniverseDimensions.width / 2 - targetNode.x) * desktopFocusScale,
-        y: (desktopUniverseDimensions.height / 2 - targetNode.y) * desktopFocusScale,
+        x: (desktopUniverseDimensions.width * 0.42 - targetNode.x) * desktopFocusScale,
+        y: (desktopUniverseDimensions.height * 0.48 - targetNode.y) * desktopFocusScale,
       });
     }
   }
@@ -827,8 +885,10 @@ const setupCommonInteractions = () => {
     }
 
     if (appState.selectedToolId) {
-      closeDetailPanel();
-      updateScene();
+      clearSelectedTool();
+      syncDesktopUniverseState();
+      updateHeader();
+      updateDetailPanel();
       return;
     }
 
@@ -839,9 +899,17 @@ const setupCommonInteractions = () => {
   });
 
   document.addEventListener("fullscreenchange", () => {
-    appState.isFullscreen = Boolean(document.fullscreenElement);
+    appState.isFullscreen = document.fullscreenElement === rootElement;
+    appState.pointerDrag.active = false;
+    appState.pointerDrag.pointerId = null;
+    desktopViewport?.classList.remove("is-dragging");
     if (appState.phase === "desktop") {
-      updateScene();
+      updateHeader();
+      updateSceneHint();
+      syncDesktopUniverseState();
+      window.requestAnimationFrame(() => {
+        applyDesktopView();
+      });
     }
   });
 };

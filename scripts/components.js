@@ -25,18 +25,42 @@ const renderStarLayer = (count, layer) => `
   </div>
 `;
 
-const renderLogoMark = (logoKey, label) => {
+const getLogoMeta = (logoKey, label) => {
   const logo = logoCatalog[logoKey];
+  const fallbackText = escapeHtml(logo?.text ?? label.slice(0, 2).toUpperCase());
+  const surface = logo?.surface ?? "dark";
 
-  if (!logo) {
-    return `<span class="mark-badge__mono">${escapeHtml(label.slice(0, 2).toUpperCase())}</span>`;
+  return {
+    logo,
+    fallbackText,
+    surface,
+  };
+};
+
+const renderMarkBadge = (logoKey, label, extraClass = "") => {
+  const { logo, fallbackText, surface } = getLogoMeta(logoKey, label);
+
+  if (!logo || logo.type !== "image") {
+    return `
+      <span class="mark-badge mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}">
+        <span class="mark-badge__mono">${fallbackText}</span>
+      </span>
+    `;
   }
 
-  if (logo.type === "image") {
-    return `<img src="${logo.src}" alt="${escapeHtml(logo.alt)}" class="mark-badge__image mark-badge__image--${logo.fit}" />`;
-  }
-
-  return `<span class="mark-badge__mono">${escapeHtml(logo.text)}</span>`;
+  return `
+    <span class="mark-badge mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}">
+      <img
+        src="${logo.src}"
+        alt="${escapeHtml(logo.alt)}"
+        class="mark-badge__image mark-badge__image--${logo.fit}"
+        loading="lazy"
+        decoding="async"
+        onerror="this.hidden=true; this.nextElementSibling.hidden=false;"
+      />
+      <span class="mark-badge__mono" hidden>${fallbackText}</span>
+    </span>
+  `;
 };
 
 const renderIntroTitle = (title) => {
@@ -69,6 +93,7 @@ const buildDesktopConnections = (nodes) => {
           id: key,
           source: node,
           target: related,
+          weight: ((node.importance ?? 1) + (related.importance ?? 1)) / 2,
         };
       })
       .filter(Boolean),
@@ -83,9 +108,10 @@ const renderDesktopRegion = (region, selectedNodeId, nodeMap) => {
       class="desktop-region${isActive ? " is-active" : ""}"
       style="--region-x:${region.x}px; --region-y:${region.y}px; --region-w:${region.width}px; --region-h:${region.height}px; --region-accent:${region.accent};"
       aria-hidden="true"
+      data-region-id="${region.id}"
     >
       <div class="desktop-region__halo"></div>
-      <div class="desktop-region__label">
+      <div class="desktop-region__label" style="--region-label-x:${region.labelX ?? -220}px; --region-label-y:${region.labelY ?? -120}px;">
         <span>${escapeHtml(region.subtitle)}</span>
         <strong>${escapeHtml(region.title)}</strong>
       </div>
@@ -96,14 +122,18 @@ const renderDesktopRegion = (region, selectedNodeId, nodeMap) => {
 const renderDesktopConnection = (connection, selectedNodeId) => {
   const isActive =
     selectedNodeId && (selectedNodeId === connection.source.id || selectedNodeId === connection.target.id);
+  const isCrossRegion = connection.source.regionId !== connection.target.regionId;
 
   return `
     <line
-      class="desktop-connection${isActive ? " is-active" : ""}"
+      class="desktop-connection${isActive ? " is-active" : ""}${isCrossRegion ? " is-cross-region" : ""}"
       x1="${connection.source.x}"
       y1="${connection.source.y}"
       x2="${connection.target.x}"
       y2="${connection.target.y}"
+      style="--connection-weight:${connection.weight.toFixed(2)};"
+      data-source-id="${connection.source.id}"
+      data-target-id="${connection.target.id}"
     />
   `;
 };
@@ -111,11 +141,15 @@ const renderDesktopConnection = (connection, selectedNodeId) => {
 const renderDesktopNode = (node, accent, selectedNodeId, relatedNodeIds) => {
   const isSelected = node.id === selectedNodeId;
   const isRelated = !isSelected && selectedNodeId && relatedNodeIds.has(node.id);
-  const scale = Math.max(0.86, Math.min(1.32, node.importance ?? 1));
+  const scale = Math.max(0.84, Math.min(1.58, node.importance ?? 1));
+  const weightClass =
+    scale >= 1.4 ? "desktop-node--primary" : scale >= 1.12 ? "desktop-node--major" : "desktop-node--support";
+  const orbClass = node.orbStyle ? ` desktop-node--${node.orbStyle}` : "";
+  const labelClass = scale < 0.96 ? " desktop-node--compact" : "";
 
   return `
     <button
-      class="desktop-node${isSelected ? " is-selected" : ""}${isRelated ? " is-related" : ""}"
+      class="desktop-node ${weightClass}${orbClass}${labelClass}${isSelected ? " is-selected" : ""}${isRelated ? " is-related" : ""}"
       type="button"
       data-desktop-node
       data-node-id="${node.id}"
@@ -124,9 +158,7 @@ const renderDesktopNode = (node, accent, selectedNodeId, relatedNodeIds) => {
     >
       <span class="desktop-node__halo" aria-hidden="true"></span>
       <span class="desktop-node__ring" aria-hidden="true"></span>
-      <span class="desktop-node__badge mark-badge">
-        ${renderLogoMark(node.logoKey, node.name)}
-      </span>
+      ${renderMarkBadge(node.logoKey, node.name, "desktop-node__badge")}
       <span class="desktop-node__label">
         <strong>${escapeHtml(node.name)}</strong>
         <span>${escapeHtml(node.type)}</span>
@@ -218,9 +250,7 @@ const renderMobileToolCard = (galaxy, planet) => `
     data-galaxy-id="${galaxy.id}"
     data-planet-id="${planet.id}"
   >
-    <span class="mobile-tool-card__badge mark-badge">
-      ${renderLogoMark(planet.logoKey, planet.name)}
-    </span>
+    ${renderMarkBadge(planet.logoKey, planet.name, "mobile-tool-card__badge")}
     <span class="mobile-tool-card__copy">
       <strong>${escapeHtml(planet.name)}</strong>
       <span>${escapeHtml(planet.type)}</span>
@@ -271,6 +301,7 @@ export const renderMobileExplorer = (content, galaxies, activeGalaxy) => `
 `;
 
 export const renderDesktopUniverse = ({
+  core,
   regions,
   nodes,
   dimensions,
@@ -307,7 +338,7 @@ export const renderDesktopUniverse = ({
         data-desktop-plane
         style="--plane-width:${dimensions.width}px; --plane-height:${dimensions.height}px;"
       >
-        <div class="desktop-universe__core" aria-hidden="true">
+        <div class="desktop-universe__core" aria-hidden="true" style="--core-x:${core.x}px; --core-y:${core.y}px;">
           <span class="desktop-universe__core-rings">
             <span></span>
             <span></span>
@@ -317,8 +348,8 @@ export const renderDesktopUniverse = ({
             <img src="assets/det105.png" alt="" />
           </div>
           <div class="desktop-universe__core-copy">
-            <span>Det 105 command core</span>
-            <strong>Interconnected AI ecosystem</strong>
+            <span>${escapeHtml(core.title)}</span>
+            <strong>${escapeHtml(core.subtitle)}</strong>
           </div>
         </div>
 
