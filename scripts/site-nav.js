@@ -24,8 +24,7 @@ const renderNav = (currentPath) => `
           <img src="/assets/det105.png" alt="" />
         </span>
         <span class="site-nav__brand-copy">
-          <span>Det 105 AI Task Force</span>
-          <strong>Navigation</strong>
+          <strong>Det 105 AI Task Force</strong>
         </span>
       </a>
 
@@ -34,9 +33,15 @@ const renderNav = (currentPath) => `
         type="button"
         aria-expanded="false"
         aria-controls="site-nav-links"
+        aria-label="Toggle navigation"
         data-site-nav-toggle
       >
-        Menu
+        <span class="site-nav__toggle-lines" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <span class="site-nav__toggle-text">Menu</span>
       </button>
 
       <nav class="site-nav__links" id="site-nav-links" aria-label="Primary navigation" data-site-nav-links>
@@ -68,14 +73,28 @@ const init = () => {
 
   const toggle = mount.querySelector("[data-site-nav-toggle]");
   const links = mount.querySelector("[data-site-nav-links]");
+  const nav = mount.querySelector(".site-nav");
   if (!toggle || !links) {
     return;
   }
 
+  const updateNavMetrics = () => {
+    const navHeight = nav?.offsetHeight ?? 0;
+    document.documentElement.style.setProperty("--site-nav-height", `${navHeight}px`);
+  };
+
   toggle.addEventListener("click", () => {
     const isOpen = links.classList.toggle("is-open");
     toggle.setAttribute("aria-expanded", String(isOpen));
+    window.requestAnimationFrame(updateNavMetrics);
   });
+
+  window.addEventListener("resize", updateNavMetrics);
+  if (typeof ResizeObserver !== "undefined" && nav) {
+    const observer = new ResizeObserver(() => updateNavMetrics());
+    observer.observe(nav);
+  }
+  window.requestAnimationFrame(updateNavMetrics);
 };
 
 if (typeof document !== "undefined") {
