@@ -14,28 +14,27 @@ This repo contains the Det 105 AI Task Force website homepage. It is currently a
 
 ## Current UX Model
 
-The intended hierarchy is strict progressive disclosure:
+The repo now supports two automatically selected experiences:
 
-1. Intro screen
-2. Universe map
-3. Galaxy drilldown
-4. Tool detail panel
+- Desktop / PC: intro -> universe map -> galaxy drilldown -> tool detail
+- Mobile: intro -> simplified category explorer -> tool detail
 
-Preserve the rule that users should not see every layer at once.
+Preserve the rule that users should not see every layer at once, but do not force the desktop galaxy interaction model onto phones.
 
-Current implementation already follows this model:
+Current implementation already follows this split:
 
-- Intro overlay is the initial state.
-- Universe view shows galaxy-level destinations only.
-- Planet/tool nodes appear only after entering a galaxy.
-- Tool details open in a closable panel after selecting a planet.
-- Escape closes the deepest open layer first.
+- Intro overlay is the initial state for both device contexts.
+- Desktop keeps the cinematic universe and galaxy drilldown flow.
+- Mobile uses a simplified explorer with category chips and tool cards.
+- Tool details open in a closable panel/sheet in both contexts.
+- Escape closes the deepest open layer first on desktop keyboards.
 
 ## Design Principles
 
 - Keep the universe layer cleaner than the galaxy layer.
 - Do not expose planet/tool nodes in the universe view.
 - Galaxy selection should feel like a dramatic zoom / drilldown transition.
+- On mobile, prefer clarity over preserving the spatial galaxy metaphor.
 - Tool/company nodes should be more interesting than plain spheres when improved, but changes must stay coherent with the current visual system.
 - Keep overlays and panels closable. No blocking UI that traps the user.
 - Avoid text-heavy layouts, clutter, cartoon styling, and bright toy-like treatments.
@@ -87,7 +86,9 @@ Current implementation already follows this model:
 
 ## What Not To Break
 
-- The progressive-disclosure flow: intro -> universe -> galaxy -> tool detail.
+- Automatic device detection between desktop and mobile.
+- The desktop progressive-disclosure flow: intro -> universe -> galaxy -> tool detail.
+- The simplified mobile explorer flow.
 - The rule that planet/tool nodes stay hidden until a galaxy is selected.
 - The dark cinematic visual language.
 - Closable overlays, modals, and panels.

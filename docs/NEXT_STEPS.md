@@ -1,30 +1,30 @@
 # Next Steps
 
 Note:
-The current codebase now has an explicit `PC` vs `Mobile` mode split, a tighter mobile-first responsive pass, local galaxy visuals, and a basic outbound-resource audit. Future sessions should verify/polish that work on real devices rather than assuming the old mobile state still exists.
+The current codebase now auto-detects desktop vs mobile and intentionally serves two different experiences. Future sessions should verify/polish that split on real devices rather than assuming mobile still uses the galaxy-map interaction model.
 
 ## Must-Haves
 
-### 1. Finalize mobile viewport fitting
+### 1. Finalize mobile explorer polish
 
 Priority: Highest
 
 Goal:
-Finish the remaining mobile polish so portrait and rotated-phone views feel fully deliberate instead of just mostly corrected.
+Finish the remaining mobile explorer polish so portrait and rotated-phone views feel fully deliberate instead of just mostly corrected.
 
 Acceptance criteria:
 
-- Intro title, mode cards, rotate guidance, and CTA all fit comfortably on modern phone sizes.
-- Mobile universe focus metadata remains visible without awkward scrolling.
+- Intro CTA, hero card, category chips, and tool cards all fit comfortably on modern phone sizes.
+- Mobile explorer remains easy to understand without relying on the desktop galaxy metaphor.
 - Low-height landscape mobile framing feels intentional, not like desktop squeezed into a short window.
 - Tool detail panels stay fully inside the viewport in portrait and landscape.
 
 Regression warnings:
 
-- Do not collapse Mobile mode back into the PC composition.
-- Do not reintroduce floating overlap between the hub, labels, and metadata panels.
+- Do not collapse Mobile Explorer back into the desktop universe composition.
+- Do not reintroduce map-style node clutter or gesture-heavy navigation on phones.
 
-### 2. Reduce universe-level clutter
+### 2. Reduce desktop universe-level clutter
 
 Priority: Highest
 
@@ -33,14 +33,14 @@ Keep the universe map readable and dramatic, with galaxy destinations only and n
 
 Acceptance criteria:
 
-- Universe view remains visually cleaner than galaxy drilldown.
+- Desktop universe view remains visually cleaner than galaxy drilldown.
 - No planet/tool nodes appear until a galaxy is selected.
 - Additional labels, copy, or chrome do not crowd the main stage.
 - Any new informational UI in universe view is optional and closable.
 
 Regression warnings:
 
-- Do not turn the universe view into a dense dashboard.
+- Do not turn the desktop universe view into a dense dashboard.
 - Do not add persistent panels that fight the map for attention.
 
 ### 3. Strengthen the intro overlay
@@ -138,16 +138,15 @@ Regression warnings:
 ## Nice-To-Haves
 
 - Add a more dramatic galaxy-selection visual accent without increasing clutter.
-- Polish the new mobile galaxy focus card, landscape framing, and bottom-sheet behaviors after real-device review.
-- Add a more explicit in-app way to reopen the mode selector from every state if the current header affordance still feels too subtle on touch devices.
+- Polish the new mobile explorer layout and landscape framing after real-device review.
 - Audit whether unused legacy assets/files in `docs/` should be cleaned up in a future focused pass.
 - Add a clearer content-editing note for non-code maintainers if the structured data grows.
 
 ## Do Not Regress
 
 - Intro -> universe -> galaxy -> detail hierarchy
-- Explicit `PC` vs `Mobile` mode separation
-- Mobile-only rotate guidance staying mobile-only
+- Automatic desktop vs mobile experience detection
+- Simplified mobile explorer flow
 - Closable overlays and panels
 - Dark cinematic style
 - Clean universe-level presentation

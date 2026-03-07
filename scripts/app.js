@@ -3,6 +3,7 @@ import {
   renderFocusScene,
   renderFooter,
   renderHeader,
+  renderMobileExplorer,
   renderScene,
   renderSceneHint,
   renderUniverseFocusPanel,
@@ -16,19 +17,24 @@ const prefersReducedMotion =
 
 const transitionDuration = prefersReducedMotion ? 0 : 1000;
 const panelTransitionDuration = prefersReducedMotion ? 0 : 280;
-const mobileViewportQuery =
-  typeof window !== "undefined"
-    ? window.matchMedia("(max-width: 760px), (orientation: landscape) and (max-height: 540px)")
-    : null;
-const savedModeKey = "det105-interface-mode";
 
 const galaxyMap = new Map(galaxyClusters.map((galaxy) => [galaxy.id, galaxy]));
 const defaultGalaxyId = galaxyClusters[0]?.id ?? null;
 
+const mediaQueries =
+  typeof window === "undefined"
+    ? []
+    : [
+        window.matchMedia("(pointer: coarse)"),
+        window.matchMedia("(any-pointer: coarse)"),
+        window.matchMedia("(hover: hover)"),
+        window.matchMedia("(any-hover: hover)"),
+      ];
+
 const appState = {
-  interfaceMode: null,
+  deviceMode: null,
   phase: "intro",
-  selectedGalaxyId: null,
+  selectedGalaxyId: defaultGalaxyId,
   focusedGalaxyId: defaultGalaxyId,
   selectedPlanetId: null,
   universeBriefOpen: false,
@@ -39,44 +45,63 @@ const appState = {
 let rootElement;
 let detailPanel;
 let focusLayer;
-let universeFocusPanel;
+let mobileExplorer;
 let sceneHint;
 let sceneZoom;
-let universeCamera;
+let universeFocusPanel;
 let transitionTimer;
 let detailHideTimer;
 
-const isMobileViewport = () => Boolean(mobileViewportQuery?.matches);
-const getRecommendedMode = () => (isMobileViewport() ? "mobile" : "pc");
-const getInterfaceMode = () => appState.interfaceMode ?? getRecommendedMode();
-const getModeConfig = () => interfaceModes[getInterfaceMode()] ?? interfaceModes.pc;
-const isMobileMode = () => getInterfaceMode() === "mobile";
-const isPcMode = () => getInterfaceMode() === "pc";
+const detectDeviceMode = () => {
+  if (typeof window === "undefined") {
+    return "pc";
+  }
 
-const getGalaxy = () => (appState.selectedGalaxyId ? galaxyMap.get(appState.selectedGalaxyId) ?? null : null);
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const coarsePointer =
+    window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(any-pointer: coarse)").matches;
+  const hoverCapable =
+    window.matchMedia("(hover: hover)").matches || window.matchMedia("(any-hover: hover)").matches;
+  const finePointer =
+    window.matchMedia("(pointer: fine)").matches || window.matchMedia("(any-pointer: fine)").matches;
+  const touchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+  const mobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+  const narrowViewport = width <= 900;
+  const shortLandscape = width > height && height <= 560;
+  const touchFirstTablet = width <= 1180 && coarsePointer && !hoverCapable;
+
+  if ((narrowViewport && (coarsePointer || touchCapable || mobileUa)) || shortLandscape || touchFirstTablet) {
+    return "mobile";
+  }
+
+  if (finePointer && hoverCapable && width >= 901) {
+    return "pc";
+  }
+
+  return width < 840 ? "mobile" : "pc";
+};
+
+const getDeviceMode = () => appState.deviceMode ?? detectDeviceMode();
+const getModeConfig = () => interfaceModes[getDeviceMode()] ?? interfaceModes.pc;
+const isMobileMode = () => getDeviceMode() === "mobile";
+const isPcMode = () => getDeviceMode() === "pc";
+
+const getDesktopGalaxy = () =>
+  appState.selectedGalaxyId ? galaxyMap.get(appState.selectedGalaxyId) ?? null : null;
+
 const getFocusedGalaxy = () =>
   appState.focusedGalaxyId ? galaxyMap.get(appState.focusedGalaxyId) ?? galaxyClusters[0] ?? null : null;
 
+const getActiveMobileGalaxy = () =>
+  appState.selectedGalaxyId ? galaxyMap.get(appState.selectedGalaxyId) ?? galaxyClusters[0] ?? null : galaxyClusters[0];
+
+const getActiveGalaxy = () => (isMobileMode() && appState.phase === "mobile" ? getActiveMobileGalaxy() : getDesktopGalaxy());
+
 const getPlanet = () => {
-  const galaxy = getGalaxy();
+  const galaxy = getActiveGalaxy();
   return galaxy?.planets.find((planet) => planet.id === appState.selectedPlanetId) ?? null;
-};
-
-const readStoredMode = () => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const value = window.localStorage.getItem(savedModeKey);
-  return value === "pc" || value === "mobile" ? value : null;
-};
-
-const storeMode = (mode) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(savedModeKey, mode);
 };
 
 const withTransitionLock = (callback, duration = transitionDuration) => {
@@ -111,218 +136,21 @@ const setCameraVars = (galaxy) => {
     return;
   }
 
-  if (!galaxy || appState.phase !== "universe" || appState.universeZoom !== "focused") {
+  if (!galaxy || !isPcMode() || appState.phase !== "universe" || appState.universeZoom !== "focused") {
     rootElement.style.setProperty("--camera-scale", "1");
     rootElement.style.setProperty("--camera-x", "0%");
     rootElement.style.setProperty("--camera-y", "0%");
     return;
   }
 
-  const scale = isPcMode() ? 1.2 : 1.06;
-  const translateX = `${(50 - galaxy.universeX) * (isPcMode() ? 0.56 : 0.22)}%`;
-  const translateY = `${(50 - galaxy.universeY) * (isPcMode() ? 0.42 : 0.18)}%`;
-  rootElement.style.setProperty("--camera-scale", String(scale));
-  rootElement.style.setProperty("--camera-x", translateX);
-  rootElement.style.setProperty("--camera-y", translateY);
-};
-
-const updateHeader = () => {
-  const status = document.querySelector("[data-header-state]");
-  const briefToggle = document.querySelector("[data-open-brief]");
-  const modeButton = document.querySelector("[data-open-mode]");
-
-  if (modeButton) {
-    modeButton.textContent = `${getModeConfig().label} Mode`;
-  }
-
-  if (!status) {
-    return;
-  }
-
-  if (briefToggle) {
-    briefToggle.hidden = isMobileMode();
-  }
-
-  if (appState.phase === "intro") {
-    status.textContent = "Select Interface";
-    if (briefToggle) {
-      briefToggle.disabled = true;
-    }
-    return;
-  }
-
-  if (appState.phase === "universe") {
-    status.textContent = isPcMode() ? "Universe Map / Desktop" : "Universe Map / Mobile";
-    if (briefToggle) {
-      briefToggle.textContent = appState.universeBriefOpen ? "Hide Brief" : "Universe Brief";
-      briefToggle.disabled = isMobileMode();
-    }
-    return;
-  }
-
-  const galaxy = getGalaxy();
-  status.textContent = galaxy ? `${galaxy.title} Drilldown` : "Galaxy Drilldown";
-  if (briefToggle) {
-    briefToggle.disabled = true;
-  }
-};
-
-const updateModeSelection = () => {
-  const launchButton = document.querySelector("[data-enter-universe]");
-  const recommendedButton = document.querySelector("[data-use-recommended]");
-  const modeTitle = document.querySelector("[data-mode-panel-title]");
-  const modeCopy = document.querySelector("[data-mode-panel-copy]");
-  const modeKicker = document.querySelector("[data-mode-panel-kicker]");
-  const rotateGuidance = document.querySelector("[data-rotate-guidance]");
-  const rotateTitle = document.querySelector("[data-rotate-title]");
-  const rotateCopy = document.querySelector("[data-rotate-copy]");
-  const recommendedMode = interfaceModes[getRecommendedMode()];
-  const mode = appState.interfaceMode;
-  const modeConfig = mode ? interfaceModes[mode] : null;
-
-  document.querySelectorAll("[data-select-mode]").forEach((button) => {
-    const isSelected = button.dataset.selectMode === mode;
-    button.classList.toggle("is-selected", isSelected);
-    button.classList.toggle("is-recommended", button.dataset.selectMode === recommendedMode.id);
-  });
-
-  if (launchButton) {
-    launchButton.disabled = !modeConfig;
-    launchButton.textContent = modeConfig ? modeConfig.enterLabel : universeContent.enterLabel;
-  }
-
-  if (recommendedButton) {
-    recommendedButton.textContent = `Use Recommended Mode (${recommendedMode.label})`;
-  }
-
-  if (!modeTitle || !modeCopy || !modeKicker) {
-    return;
-  }
-
-  if (!modeConfig) {
-    modeKicker.textContent = "Interface Profile";
-    modeTitle.textContent = "Select a command view";
-    modeCopy.textContent =
-      "Choose PC or Mobile to load the interface profile that fits your device and control style.";
-    if (rotateGuidance) {
-      rotateGuidance.hidden = true;
-      rotateGuidance.classList.remove("is-active");
-    }
-    return;
-  }
-
-  modeKicker.textContent = modeConfig.eyebrow;
-  modeTitle.textContent = modeConfig.title;
-  modeCopy.textContent = modeConfig.summary;
-
-  if (!rotateGuidance || !rotateTitle || !rotateCopy) {
-    return;
-  }
-
-  const showRotate = modeConfig.id === "mobile";
-  rotateGuidance.hidden = !showRotate;
-  rotateGuidance.classList.toggle("is-active", showRotate);
-
-  if (showRotate) {
-    rotateTitle.textContent = modeConfig.rotateTitle;
-    rotateCopy.textContent = modeConfig.rotateCopy;
-  }
-};
-
-const updateUniverseLayer = () => {
-  document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
-    const isSelected = button.dataset.galaxyId === appState.selectedGalaxyId;
-    const isFocused =
-      button.dataset.galaxyId === appState.focusedGalaxyId &&
-      appState.phase === "universe" &&
-      (isMobileMode() || appState.universeZoom === "focused");
-    button.classList.toggle("is-selected", isSelected);
-    button.classList.toggle("is-focused", isFocused);
-  });
-};
-
-const updateUniverseBrief = () => {
-  const brief = document.querySelector("[data-universe-brief]");
-  if (!brief) {
-    return;
-  }
-
-  const shouldShow = appState.phase === "universe" && appState.universeBriefOpen && isPcMode();
-  brief.hidden = !shouldShow;
-  brief.classList.toggle("is-active", shouldShow);
-};
-
-const updateSceneHint = () => {
-  if (!sceneHint) {
-    return;
-  }
-
-  const shouldShow = appState.phase !== "intro" && Boolean(appState.interfaceMode);
-  sceneHint.hidden = !shouldShow;
-
-  if (!shouldShow) {
-    sceneHint.innerHTML = "";
-    sceneHint.classList.remove("is-active");
-    return;
-  }
-
-  sceneHint.innerHTML = renderSceneHint(getModeConfig(), appState.phase, getFocusedGalaxy());
-  sceneHint.classList.add("is-active");
-};
-
-const bindZoomControls = () => {
-  sceneZoom?.querySelector("[data-zoom-in]")?.addEventListener("click", () => {
-    if (appState.phase === "universe") {
-      if (appState.universeZoom !== "focused") {
-        focusGalaxy(appState.focusedGalaxyId ?? defaultGalaxyId, true);
-        return;
-      }
-
-      if (appState.focusedGalaxyId) {
-        enterGalaxy(appState.focusedGalaxyId);
-      }
-    }
-  });
-
-  sceneZoom?.querySelector("[data-zoom-out]")?.addEventListener("click", () => {
-    if (appState.selectedPlanetId) {
-      closeDetailPanel();
-      return;
-    }
-
-    if (appState.phase === "galaxy" && !appState.transitionLock) {
-      focusLayer?.querySelector("[data-back-universe]")?.click();
-      return;
-    }
-
-    if (appState.phase === "universe") {
-      appState.universeZoom = "overview";
-      setCameraVars(null);
-      updateScene();
-    }
-  });
-};
-
-const updateSceneZoom = () => {
-  if (!sceneZoom) {
-    return;
-  }
-
-  const shouldShow = appState.phase !== "intro" && Boolean(appState.interfaceMode);
-  sceneZoom.hidden = !shouldShow;
-
-  if (!shouldShow) {
-    sceneZoom.innerHTML = "";
-    sceneZoom.classList.remove("is-active");
-    return;
-  }
-
-  sceneZoom.innerHTML = renderZoomControls(getInterfaceMode(), appState.phase, appState.universeZoom === "focused");
-  sceneZoom.classList.add("is-active");
-  bindZoomControls();
+  rootElement.style.setProperty("--camera-scale", "1.2");
+  rootElement.style.setProperty("--camera-x", `${(50 - galaxy.universeX) * 0.56}%`);
+  rootElement.style.setProperty("--camera-y", `${(50 - galaxy.universeY) * 0.42}%`);
 };
 
 const closeDetailPanel = (immediate = false) => {
+  appState.selectedPlanetId = null;
+
   if (!detailPanel) {
     return;
   }
@@ -343,17 +171,173 @@ const closeDetailPanel = (immediate = false) => {
   detailHideTimer = window.setTimeout(hide, panelTransitionDuration);
 };
 
+const updateHeader = () => {
+  const status = document.querySelector("[data-header-state]");
+  const briefToggle = document.querySelector("[data-open-brief]");
+  const deviceBadge = document.querySelector("[data-device-badge]");
+
+  if (deviceBadge) {
+    deviceBadge.textContent = isMobileMode() ? "Mobile Explorer" : "Desktop Universe";
+  }
+
+  if (!status || !briefToggle) {
+    return;
+  }
+
+  const showBriefToggle = isPcMode() && appState.phase === "universe";
+  briefToggle.hidden = !showBriefToggle;
+  briefToggle.disabled = !showBriefToggle;
+
+  if (appState.phase === "intro") {
+    status.textContent = isMobileMode() ? "Touch-First Tool Explorer" : "Desktop Command View";
+    return;
+  }
+
+  if (isMobileMode()) {
+    const galaxy = getActiveMobileGalaxy();
+    status.textContent = galaxy ? `${galaxy.title} Directory` : "Mobile Explorer";
+    return;
+  }
+
+  if (appState.phase === "universe") {
+    status.textContent = "Universe Map / Desktop";
+    briefToggle.textContent = appState.universeBriefOpen ? "Hide Brief" : "Universe Brief";
+    return;
+  }
+
+  const galaxy = getDesktopGalaxy();
+  status.textContent = galaxy ? `${galaxy.title} Drilldown` : "Galaxy Drilldown";
+};
+
+const updateIntroOverlay = () => {
+  const title = document.querySelector("[data-intro-profile-title]");
+  const copy = document.querySelector("[data-intro-profile-copy]");
+  const primary = document.querySelector("[data-enter-primary]");
+
+  if (!title || !copy || !primary) {
+    return;
+  }
+
+  if (isMobileMode()) {
+    title.textContent = "Mobile Tool Explorer";
+    copy.textContent = "Simplified touch-first category browsing with clean tool cards and mobile-safe detail sheets.";
+    primary.textContent = "Open Mobile Explorer";
+    return;
+  }
+
+  title.textContent = "Desktop Universe Command";
+  copy.textContent = "Rich cinematic navigation with galaxy drilldown, tool-node exploration, and desktop focus controls.";
+  primary.textContent = "Enter AI Universe";
+};
+
+const updateUniverseLayer = () => {
+  document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
+    const isSelected = button.dataset.galaxyId === appState.selectedGalaxyId;
+    const isFocused =
+      isPcMode() &&
+      button.dataset.galaxyId === appState.focusedGalaxyId &&
+      appState.phase === "universe" &&
+      appState.universeZoom === "focused";
+
+    button.classList.toggle("is-selected", isSelected);
+    button.classList.toggle("is-focused", isFocused);
+  });
+};
+
+const updateUniverseBrief = () => {
+  const brief = document.querySelector("[data-universe-brief]");
+  if (!brief) {
+    return;
+  }
+
+  const shouldShow = isPcMode() && appState.phase === "universe" && appState.universeBriefOpen;
+  brief.hidden = !shouldShow;
+  brief.classList.toggle("is-active", shouldShow);
+};
+
+const bindZoomControls = () => {
+  sceneZoom?.querySelector("[data-zoom-in]")?.addEventListener("click", () => {
+    if (!isPcMode() || appState.phase !== "universe") {
+      return;
+    }
+
+    if (appState.universeZoom !== "focused") {
+      focusGalaxy(appState.focusedGalaxyId ?? defaultGalaxyId, true);
+      return;
+    }
+
+    if (appState.focusedGalaxyId) {
+      enterGalaxy(appState.focusedGalaxyId);
+    }
+  });
+
+  sceneZoom?.querySelector("[data-zoom-out]")?.addEventListener("click", () => {
+    if (!isPcMode()) {
+      return;
+    }
+
+    if (appState.selectedPlanetId) {
+      closeDetailPanel();
+      return;
+    }
+
+    if (appState.phase === "galaxy" && !appState.transitionLock) {
+      focusLayer?.querySelector("[data-back-universe]")?.click();
+      return;
+    }
+
+    if (appState.phase === "universe" && appState.universeZoom === "focused") {
+      appState.universeZoom = "overview";
+      setCameraVars(null);
+      updateScene();
+    }
+  });
+};
+
+const updateSceneHint = () => {
+  if (!sceneHint) {
+    return;
+  }
+
+  const shouldShow = isPcMode() && appState.phase !== "intro";
+  sceneHint.hidden = !shouldShow;
+
+  if (!shouldShow) {
+    sceneHint.innerHTML = "";
+    sceneHint.classList.remove("is-active");
+    return;
+  }
+
+  sceneHint.innerHTML = renderSceneHint(getModeConfig(), appState.phase, getFocusedGalaxy());
+  sceneHint.classList.add("is-active");
+};
+
+const updateSceneZoom = () => {
+  if (!sceneZoom) {
+    return;
+  }
+
+  const shouldShow = isPcMode() && appState.phase !== "intro";
+  sceneZoom.hidden = !shouldShow;
+
+  if (!shouldShow) {
+    sceneZoom.innerHTML = "";
+    sceneZoom.classList.remove("is-active");
+    return;
+  }
+
+  sceneZoom.innerHTML = renderZoomControls(getDeviceMode(), appState.phase, appState.universeZoom === "focused");
+  sceneZoom.classList.add("is-active");
+  bindZoomControls();
+};
+
 const updateUniverseFocusPanel = () => {
   if (!universeFocusPanel) {
     return;
   }
 
   const galaxy = getFocusedGalaxy();
-  const shouldShow =
-    appState.phase === "universe" &&
-    Boolean(galaxy) &&
-    Boolean(appState.interfaceMode) &&
-    (isMobileMode() || appState.universeZoom === "focused");
+  const shouldShow = isPcMode() && appState.phase === "universe" && Boolean(galaxy) && appState.universeZoom === "focused";
 
   universeFocusPanel.hidden = !shouldShow;
   universeFocusPanel.classList.toggle("is-active", shouldShow);
@@ -363,7 +347,7 @@ const updateUniverseFocusPanel = () => {
     return;
   }
 
-  universeFocusPanel.innerHTML = renderUniverseFocusPanel(galaxy, getInterfaceMode());
+  universeFocusPanel.innerHTML = renderUniverseFocusPanel(galaxy, getDeviceMode());
   universeFocusPanel.style.setProperty("--panel-accent", galaxy.accent);
   universeFocusPanel.querySelector("[data-enter-focused-galaxy]")?.addEventListener("click", () => {
     enterGalaxy(galaxy.id);
@@ -378,7 +362,6 @@ const bindFocusSceneEvents = () => {
 
     const returnGalaxyId = appState.selectedGalaxyId;
     rootElement.classList.add("is-returning");
-    appState.selectedPlanetId = null;
     closeDetailPanel(true);
 
     withTransitionLock(() => {
@@ -388,7 +371,7 @@ const bindFocusSceneEvents = () => {
         appState.focusedGalaxyId = returnGalaxyId ?? appState.focusedGalaxyId;
         appState.selectedGalaxyId = null;
         appState.universeBriefOpen = false;
-        appState.universeZoom = isPcMode() ? "focused" : "overview";
+        appState.universeZoom = "focused";
         setTravelVars(null);
         setCameraVars(getFocusedGalaxy());
         updateScene();
@@ -409,19 +392,58 @@ const updateFocusScene = () => {
     return;
   }
 
-  if (appState.phase !== "galaxy") {
+  if (!isPcMode() || appState.phase !== "galaxy") {
     focusLayer.innerHTML = "";
     return;
   }
 
-  const galaxy = getGalaxy();
+  const galaxy = getDesktopGalaxy();
   if (!galaxy) {
     focusLayer.innerHTML = "";
     return;
   }
 
-  focusLayer.innerHTML = renderFocusScene(galaxy, getInterfaceMode());
+  focusLayer.innerHTML = renderFocusScene(galaxy, getDeviceMode());
   bindFocusSceneEvents();
+};
+
+const updateMobileExplorer = () => {
+  if (!mobileExplorer) {
+    return;
+  }
+
+  const shouldShow = isMobileMode() && appState.phase === "mobile";
+  mobileExplorer.hidden = !shouldShow;
+  mobileExplorer.classList.toggle("is-active", shouldShow);
+
+  if (!shouldShow) {
+    mobileExplorer.innerHTML = "";
+    return;
+  }
+
+  const galaxy = getActiveMobileGalaxy();
+  if (!galaxy) {
+    mobileExplorer.innerHTML = "";
+    return;
+  }
+
+  mobileExplorer.innerHTML = renderMobileExplorer(universeContent, galaxyClusters, galaxy);
+
+  mobileExplorer.querySelectorAll("[data-mobile-category]").forEach((button) => {
+    button.addEventListener("click", () => {
+      appState.selectedGalaxyId = button.dataset.galaxyId;
+      closeDetailPanel(true);
+      updateScene();
+    });
+  });
+
+  mobileExplorer.querySelectorAll("[data-mobile-tool]").forEach((button) => {
+    button.addEventListener("click", () => {
+      appState.selectedGalaxyId = button.dataset.galaxyId;
+      appState.selectedPlanetId = button.dataset.planetId;
+      updateDetailPanel();
+    });
+  });
 };
 
 const updateDetailPanel = () => {
@@ -429,12 +451,15 @@ const updateDetailPanel = () => {
     return;
   }
 
-  if (appState.phase !== "galaxy" || !appState.selectedPlanetId) {
+  const supportsDetail =
+    (isPcMode() && appState.phase === "galaxy") || (isMobileMode() && appState.phase === "mobile");
+
+  if (!supportsDetail || !appState.selectedPlanetId) {
     closeDetailPanel();
     return;
   }
 
-  const galaxy = getGalaxy();
+  const galaxy = getActiveGalaxy();
   const planet = getPlanet();
 
   if (!galaxy || !planet) {
@@ -443,7 +468,7 @@ const updateDetailPanel = () => {
   }
 
   detailPanel.hidden = false;
-  detailPanel.innerHTML = renderDetailPanel({ galaxy, planet, mode: getInterfaceMode() });
+  detailPanel.innerHTML = renderDetailPanel({ galaxy, planet, mode: getDeviceMode() });
   detailPanel.style.setProperty("--panel-accent", galaxy.accent);
   detailPanel.classList.remove("is-active");
 
@@ -451,8 +476,13 @@ const updateDetailPanel = () => {
     detailPanel.classList.add("is-active");
   });
 
-  detailPanel.querySelector("[data-close-detail]")?.addEventListener("click", closeDetailPanel);
-  detailPanel.querySelector("[data-back-galaxy]")?.addEventListener("click", closeDetailPanel);
+  const closeAndRefresh = () => {
+    closeDetailPanel();
+    updateScene();
+  };
+
+  detailPanel.querySelector("[data-close-detail]")?.addEventListener("click", closeAndRefresh);
+  detailPanel.querySelector("[data-back-galaxy]")?.addEventListener("click", closeAndRefresh);
 };
 
 const updateScene = () => {
@@ -461,50 +491,69 @@ const updateScene = () => {
   }
 
   rootElement.dataset.phase = appState.phase;
-  rootElement.dataset.viewport = isMobileViewport() ? "mobile-viewport" : "wide-viewport";
-  rootElement.dataset.interfaceMode = getInterfaceMode();
+  rootElement.dataset.viewport = window.innerWidth <= 900 ? "mobile-viewport" : "wide-viewport";
+  rootElement.dataset.interfaceMode = getDeviceMode();
+  rootElement.dataset.deviceMode = getDeviceMode();
   rootElement.dataset.universeZoom = appState.universeZoom;
-  rootElement.dataset.orientation =
-    typeof window !== "undefined" && window.innerWidth > window.innerHeight ? "landscape" : "portrait";
+  rootElement.dataset.orientation = window.innerWidth > window.innerHeight ? "landscape" : "portrait";
 
-  if (appState.phase === "universe") {
+  if (isPcMode() && appState.phase === "universe") {
     setCameraVars(getFocusedGalaxy());
   } else {
     setCameraVars(null);
   }
 
   updateHeader();
-  updateModeSelection();
+  updateIntroOverlay();
   updateUniverseLayer();
   updateUniverseBrief();
   updateUniverseFocusPanel();
   updateSceneHint();
   updateSceneZoom();
   updateFocusScene();
+  updateMobileExplorer();
   updateDetailPanel();
 };
 
-const selectInterfaceMode = (mode, persist = true) => {
-  if (!(mode in interfaceModes)) {
+const enterDesktopUniverse = () => {
+  if (appState.transitionLock) {
     return;
   }
 
-  appState.interfaceMode = mode;
+  appState.phase = "universe";
   appState.universeBriefOpen = false;
+  appState.selectedGalaxyId = null;
+  appState.selectedPlanetId = null;
+  appState.focusedGalaxyId = appState.focusedGalaxyId ?? defaultGalaxyId;
+  appState.universeZoom = "overview";
+  rootElement.classList.add("is-unveiling");
+  updateScene();
+  withTransitionLock(() => {}, transitionDuration);
+};
 
-  if (persist) {
-    storeMode(mode);
-  }
-
-  if (mode === "mobile") {
-    appState.universeZoom = "overview";
-  }
-
+const enterMobileExplorer = () => {
+  appState.phase = "mobile";
+  appState.selectedGalaxyId = appState.selectedGalaxyId ?? defaultGalaxyId;
+  appState.focusedGalaxyId = appState.selectedGalaxyId;
+  appState.universeBriefOpen = false;
+  appState.universeZoom = "overview";
+  closeDetailPanel(true);
+  setTravelVars(null);
+  setCameraVars(null);
   updateScene();
 };
 
+const enterPrimaryExperience = () => {
+  if (isMobileMode()) {
+    enterMobileExplorer();
+    return;
+  }
+
+  enterDesktopUniverse();
+};
+
 const focusGalaxy = (galaxyId, zoomFocused) => {
-  if (!galaxyMap.has(galaxyId)) {
+  if (!isPcMode() || !galaxyMap.has(galaxyId)) {
     return;
   }
 
@@ -514,28 +563,8 @@ const focusGalaxy = (galaxyId, zoomFocused) => {
   updateScene();
 };
 
-const enterUniverse = () => {
-  if (appState.transitionLock) {
-    return;
-  }
-
-  if (!appState.interfaceMode) {
-    selectInterfaceMode(getRecommendedMode());
-  }
-
-  appState.phase = "universe";
-  appState.universeBriefOpen = false;
-  appState.selectedGalaxyId = null;
-  appState.selectedPlanetId = null;
-  appState.focusedGalaxyId = appState.focusedGalaxyId ?? defaultGalaxyId;
-  appState.universeZoom = isPcMode() ? "overview" : "overview";
-  rootElement.classList.add("is-unveiling");
-  updateScene();
-  withTransitionLock(() => {}, transitionDuration);
-};
-
 const enterGalaxy = (galaxyId) => {
-  if (appState.transitionLock || !galaxyMap.has(galaxyId)) {
+  if (!isPcMode() || appState.transitionLock || !galaxyMap.has(galaxyId)) {
     return;
   }
 
@@ -552,31 +581,40 @@ const enterGalaxy = (galaxyId) => {
   withTransitionLock(() => {}, transitionDuration);
 };
 
-const openModeSelector = () => {
-  appState.phase = "intro";
-  appState.selectedGalaxyId = null;
-  appState.selectedPlanetId = null;
+const syncDeviceMode = (nextMode) => {
+  if (nextMode === appState.deviceMode) {
+    return;
+  }
+
+  appState.deviceMode = nextMode;
   appState.universeBriefOpen = false;
-  appState.universeZoom = "overview";
   closeDetailPanel(true);
-  setTravelVars(null);
-  setCameraVars(null);
+
+  if (nextMode === "mobile") {
+    appState.selectedGalaxyId = appState.selectedGalaxyId ?? appState.focusedGalaxyId ?? defaultGalaxyId;
+    appState.phase = appState.phase === "intro" ? "intro" : "mobile";
+    appState.universeZoom = "overview";
+    setTravelVars(null);
+    setCameraVars(null);
+  } else {
+    appState.focusedGalaxyId = appState.selectedGalaxyId ?? appState.focusedGalaxyId ?? defaultGalaxyId;
+    appState.selectedGalaxyId = null;
+    appState.phase = appState.phase === "intro" ? "intro" : "universe";
+    appState.universeZoom = "overview";
+    setTravelVars(null);
+  }
+
   updateScene();
 };
 
 const setupInteractions = () => {
   document.querySelectorAll("[data-galaxy-button]").forEach((button) => {
     button.addEventListener("click", () => {
+      if (!isPcMode() || appState.phase !== "universe") {
+        return;
+      }
+
       const galaxyId = button.dataset.galaxyId;
-
-      if (appState.phase !== "universe") {
-        return;
-      }
-
-      if (isMobileMode()) {
-        focusGalaxy(galaxyId, true);
-        return;
-      }
 
       if (appState.focusedGalaxyId === galaxyId && appState.universeZoom === "focused") {
         enterGalaxy(galaxyId);
@@ -587,16 +625,7 @@ const setupInteractions = () => {
     });
   });
 
-  document.querySelectorAll("[data-select-mode]").forEach((button) => {
-    button.addEventListener("click", () => selectInterfaceMode(button.dataset.selectMode));
-  });
-
-  document.querySelector("[data-enter-universe]")?.addEventListener("click", enterUniverse);
-  document.querySelector("[data-use-recommended]")?.addEventListener("click", () => {
-    selectInterfaceMode(getRecommendedMode());
-    enterUniverse();
-  });
-  document.querySelector("[data-open-mode]")?.addEventListener("click", openModeSelector);
+  document.querySelector("[data-enter-primary]")?.addEventListener("click", enterPrimaryExperience);
 
   document.querySelector("[data-close-brief]")?.addEventListener("click", () => {
     appState.universeBriefOpen = false;
@@ -604,7 +633,7 @@ const setupInteractions = () => {
   });
 
   document.querySelector("[data-open-brief]")?.addEventListener("click", () => {
-    if (appState.phase !== "universe" || isMobileMode()) {
+    if (!isPcMode() || appState.phase !== "universe") {
       return;
     }
 
@@ -615,27 +644,28 @@ const setupInteractions = () => {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       if (appState.phase === "intro") {
-        enterUniverse();
+        enterPrimaryExperience();
         return;
       }
 
       if (appState.selectedPlanetId) {
         closeDetailPanel();
+        updateScene();
         return;
       }
 
-      if (appState.phase === "galaxy" && !appState.transitionLock) {
+      if (isPcMode() && appState.phase === "galaxy" && !appState.transitionLock) {
         focusLayer?.querySelector("[data-back-universe]")?.click();
         return;
       }
 
-      if (appState.phase === "universe" && appState.universeBriefOpen) {
+      if (isPcMode() && appState.phase === "universe" && appState.universeBriefOpen) {
         appState.universeBriefOpen = false;
         updateUniverseBrief();
       }
     }
 
-    if (event.key === "Enter" && appState.phase === "universe" && isPcMode() && appState.focusedGalaxyId) {
+    if (event.key === "Enter" && isPcMode() && appState.phase === "universe" && appState.focusedGalaxyId) {
       if (appState.universeZoom === "focused") {
         enterGalaxy(appState.focusedGalaxyId);
       } else {
@@ -673,91 +703,6 @@ const setupParallax = () => {
   stage.addEventListener("pointerleave", reset);
 };
 
-const setupZoomGestures = () => {
-  const stage = document.querySelector("[data-scene-stage]");
-
-  if (!stage) {
-    return;
-  }
-
-  const pointers = new Map();
-  let pinchStartDistance = null;
-  let pinchHandled = false;
-
-  const getDistance = () => {
-    const values = [...pointers.values()];
-    if (values.length < 2) {
-      return 0;
-    }
-
-    const [first, second] = values;
-    return Math.hypot(first.x - second.x, first.y - second.y);
-  };
-
-  const resetPinch = () => {
-    pinchStartDistance = null;
-    pinchHandled = false;
-  };
-
-  stage.addEventListener("pointerdown", (event) => {
-    if (event.pointerType !== "touch") {
-      return;
-    }
-
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-
-    if (pointers.size === 2) {
-      pinchStartDistance = getDistance();
-      pinchHandled = false;
-    }
-  });
-
-  stage.addEventListener("pointermove", (event) => {
-    if (event.pointerType !== "touch" || !pointers.has(event.pointerId) || !isMobileMode()) {
-      return;
-    }
-
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-
-    if (pointers.size !== 2 || !pinchStartDistance || pinchHandled) {
-      return;
-    }
-
-    const scale = getDistance() / pinchStartDistance;
-
-    if (scale > 1.1) {
-      pinchHandled = true;
-
-      if (appState.phase === "universe" && appState.focusedGalaxyId) {
-        enterGalaxy(appState.focusedGalaxyId);
-      }
-    }
-
-    if (scale < 0.9) {
-      pinchHandled = true;
-
-      if (appState.selectedPlanetId) {
-        closeDetailPanel();
-        return;
-      }
-
-      if (appState.phase === "galaxy" && !appState.transitionLock) {
-        focusLayer?.querySelector("[data-back-universe]")?.click();
-      }
-    }
-  });
-
-  const clearPointer = (event) => {
-    pointers.delete(event.pointerId);
-    if (pointers.size < 2) {
-      resetPinch();
-    }
-  };
-
-  stage.addEventListener("pointerup", clearPointer);
-  stage.addEventListener("pointercancel", clearPointer);
-};
-
 const setupWheelZoom = () => {
   const stage = document.querySelector("[data-scene-stage]");
 
@@ -774,19 +719,18 @@ const setupWheelZoom = () => {
 
       event.preventDefault();
 
-      if (event.deltaY < -8) {
-        if (appState.phase === "universe") {
-          if (appState.universeZoom !== "focused") {
-            focusGalaxy(appState.focusedGalaxyId ?? defaultGalaxyId, true);
-          } else if (appState.focusedGalaxyId) {
-            enterGalaxy(appState.focusedGalaxyId);
-          }
+      if (event.deltaY < -8 && appState.phase === "universe") {
+        if (appState.universeZoom !== "focused") {
+          focusGalaxy(appState.focusedGalaxyId ?? defaultGalaxyId, true);
+        } else if (appState.focusedGalaxyId) {
+          enterGalaxy(appState.focusedGalaxyId);
         }
       }
 
       if (event.deltaY > 8) {
         if (appState.selectedPlanetId) {
           closeDetailPanel();
+          updateScene();
           return;
         }
 
@@ -818,30 +762,40 @@ const applyDebugStateFromUrl = () => {
   const mode = params.get("mode");
 
   if (mode === "pc" || mode === "mobile") {
-    appState.interfaceMode = mode;
+    appState.deviceMode = mode;
   }
 
-  if (phase === "universe") {
+  if (phase === "universe" && isPcMode()) {
     appState.phase = "universe";
-    appState.interfaceMode = appState.interfaceMode ?? getRecommendedMode();
     if (galaxyMap.has(galaxy)) {
       appState.focusedGalaxyId = galaxy;
       appState.universeZoom = "focused";
     }
-    appState.universeBriefOpen = params.get("brief") === "open" && isPcMode();
+    appState.universeBriefOpen = params.get("brief") === "open";
   }
 
-  if (phase === "galaxy" && galaxyMap.has(galaxy)) {
+  if (phase === "galaxy" && isPcMode() && galaxyMap.has(galaxy)) {
     appState.phase = "galaxy";
-    appState.interfaceMode = appState.interfaceMode ?? getRecommendedMode();
     appState.selectedGalaxyId = galaxy;
     appState.focusedGalaxyId = galaxy;
     appState.universeZoom = "focused";
-    appState.universeBriefOpen = false;
     setTravelVars(galaxyMap.get(galaxy));
 
     if (planet) {
       const target = galaxyMap.get(galaxy).planets.find((entry) => entry.id === planet);
+      appState.selectedPlanetId = target?.id ?? null;
+    }
+  }
+
+  if (phase === "mobile" || (phase === "universe" && isMobileMode())) {
+    appState.phase = "mobile";
+    if (galaxyMap.has(galaxy)) {
+      appState.selectedGalaxyId = galaxy;
+    }
+
+    if (planet) {
+      const targetGalaxy = getActiveMobileGalaxy();
+      const target = targetGalaxy?.planets.find((entry) => entry.id === planet);
       appState.selectedPlanetId = target?.id ?? null;
     }
   }
@@ -852,12 +806,12 @@ export const boot = (root = document.getElementById("app")) => {
     return;
   }
 
-  appState.interfaceMode = readStoredMode();
+  appState.deviceMode = detectDeviceMode();
 
   root.innerHTML = `
-    <div class="page-shell app-shell" data-phase="intro" data-interface-mode="unset">
+    <div class="page-shell app-shell" data-phase="intro" data-interface-mode="${appState.deviceMode}">
       ${renderHeader(universeContent)}
-      ${renderScene(universeContent, galaxyClusters, interfaceModes)}
+      ${renderScene(universeContent, galaxyClusters)}
       ${renderFooter(universeContent)}
     </div>
   `;
@@ -865,10 +819,10 @@ export const boot = (root = document.getElementById("app")) => {
   rootElement = root.querySelector(".app-shell");
   detailPanel = root.querySelector("[data-detail-panel]");
   focusLayer = root.querySelector("[data-focus-layer]");
-  universeFocusPanel = root.querySelector("[data-universe-focus]");
+  mobileExplorer = root.querySelector("[data-mobile-explorer]");
   sceneHint = root.querySelector("[data-scene-hint]");
   sceneZoom = root.querySelector("[data-scene-zoom]");
-  universeCamera = root.querySelector("[data-universe-camera]");
+  universeFocusPanel = root.querySelector("[data-universe-focus]");
 
   setTravelVars(null);
   setCameraVars(null);
@@ -877,22 +831,19 @@ export const boot = (root = document.getElementById("app")) => {
   setupInteractions();
   setupParallax();
   setupWheelZoom();
-  setupZoomGestures();
 
-  if (mobileViewportQuery) {
-    const handleViewportChange = () => {
-      if (isMobileMode()) {
-        appState.universeBriefOpen = false;
-      }
+  const handleViewportChange = () => {
+    const nextMode = detectDeviceMode();
+    if (nextMode !== appState.deviceMode) {
+      syncDeviceMode(nextMode);
+      return;
+    }
 
-      updateModeSelection();
-      updateScene();
-    };
+    updateScene();
+  };
 
-    mobileViewportQuery.addEventListener("change", handleViewportChange);
-  }
-
-  window.addEventListener("resize", updateScene);
+  mediaQueries.forEach((query) => query.addEventListener("change", handleViewportChange));
+  window.addEventListener("resize", handleViewportChange);
 };
 
 if (typeof document !== "undefined") {

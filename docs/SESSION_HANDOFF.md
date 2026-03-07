@@ -45,8 +45,8 @@ The homepage is currently composed from these major UI layers:
 
 State lives in `scripts/app.js`:
 
-- `interfaceMode`: `"pc"` or `"mobile"`
-- `phase`: `"intro"`, `"universe"`, or `"galaxy"`
+- `deviceMode`: `"pc"` or `"mobile"`
+- `phase`: `"intro"`, `"universe"`, `"galaxy"`, or `"mobile"`
 - `selectedGalaxyId`
 - `focusedGalaxyId`
 - `selectedPlanetId`
@@ -57,14 +57,16 @@ State lives in `scripts/app.js`:
 Important flow behavior:
 
 - Default state is `phase: "intro"`.
-- Intro now includes an explicit interface-profile choice: `PC` or `Mobile`.
-- The selected interface mode is persisted in `localStorage` under `det105-interface-mode`.
-- `enterUniverse()` moves from intro to universe.
-- `enterGalaxy(galaxyId)` moves from universe to galaxy and clears selected tool state.
-- In galaxy phase, clicking a planet/tool node opens the detail panel.
+- Device mode is now chosen automatically from viewport, pointer/hover capability, touch capability, and a user-agent fallback.
+- There is no longer a manual PC/Mobile selector.
+- Desktop flow moves from intro to universe, then galaxy, then detail.
+- Mobile flow moves from intro to a simplified explorer, then detail.
+- `enterGalaxy(galaxyId)` is desktop-only and clears selected tool state.
+- In galaxy phase or mobile explorer phase, clicking/tapping a tool opens the detail panel.
 - Backing out from galaxy view returns to universe with a timed transition.
 - Escape key exits the deepest currently open layer first.
-- Desktop wheel input and mobile touch gestures both participate in the current zoom/focus model.
+- Desktop wheel input still participates in the current zoom/focus model.
+- Mobile no longer relies on galaxy-map gestures for core navigation.
 
 There is also a debug URL helper:
 
@@ -72,6 +74,9 @@ There is also a debug URL helper:
 - `?phase=universe&brief=open`
 - `?phase=galaxy&galaxy=<id>`
 - `?phase=galaxy&galaxy=<id>&planet=<id>`
+- `?phase=mobile&galaxy=<id>`
+- `?phase=mobile&galaxy=<id>&planet=<id>`
+- `?mode=pc` or `?mode=mobile` can still be used as a debug override for testing render paths
 
 ## Current Content Model
 
@@ -109,29 +114,33 @@ Each galaxy includes title/subtitle, accent colors, universe position, focus cop
 
 Future sessions should treat `docs/` carefully and avoid assuming it is the live homepage source.
 
-## Mode Separation / Responsiveness Notes
+## Device Detection / Responsiveness Notes
 
-The homepage now intentionally supports two distinct interface profiles:
+The homepage now intentionally supports two automatically selected experiences:
 
-- `PC` mode
-- `Mobile` mode
-
-This is explicit app state, not just CSS breakpoint behavior.
+- `Desktop Universe`
+- `Mobile Explorer`
 
 Current implementation details:
 
-- Intro profile selection is rendered in `scripts/components.js`.
-- `scripts/app.js` stores the selected mode, updates mode-specific hints, and keeps PC/mobile control affordances separate.
-- Mobile mode shows rotate guidance on the intro screen only.
-- PC mode keeps desktop-oriented hinting and wheel/click focus behavior.
-- Mobile mode keeps touch-oriented hinting, compact overlays, and mobile-safe panel behavior.
+- `scripts/app.js` detects mobile vs desktop using multiple signals:
+  - viewport width
+  - short landscape height
+  - coarse vs fine pointer capability
+  - hover capability
+  - touch capability
+  - mobile user-agent fallback
+- The app updates when resize/orientation changes produce a real mode change.
+- Desktop keeps the cinematic universe + galaxy drilldown interaction model.
+- Mobile uses a simplified category explorer with chips, tool cards, and a mobile-safe detail sheet.
 
 Current responsive/layout strategy in `styles.css`:
 
-- Desktop/PC mode preserves the richer spatial composition.
-- Narrow-width mobile mode uses a guided mobile composition with simplified galaxy cards and mobile-safe tool panels.
-- Low-height landscape mobile mode has its own dedicated treatment so rotated phones do not fall back into the desktop composition accidentally.
-- The mobile detail panel is a fixed bottom sheet in portrait and a bounded floating panel in low-height landscape.
+- Desktop/PC mode preserves the richer spatial composition and zoom/focus behavior.
+- Mobile intro is simpler and auto-detected.
+- Mobile `phase="mobile"` hides the desktop map layers and shows the simplified explorer instead.
+- The mobile detail panel is still fixed/bounded for viewport safety.
+- Low-height landscape mobile is functional, but still a real-device polish area.
 
 ## Known Fragile / Important Areas
 
@@ -143,8 +152,8 @@ Current responsive/layout strategy in `styles.css`:
 
 Current real-device follow-up notes:
 
-- The mobile intro has been tightened substantially, but should still be checked on actual iPhone/Android hardware for final CTA fit and safe-area comfort.
-- The mobile universe focus card and the low-height landscape framing are improved, but still merit real-device polish after live touch testing.
+- The mobile intro and explorer are now much simpler, but should still be checked on actual iPhone/Android hardware for final spacing and scroll feel.
+- Low-height landscape mobile is serviceable, but still merits real-device polish after live touch testing.
 
 ## What A New Session Should Inspect First
 
@@ -161,6 +170,7 @@ Current real-device follow-up notes:
 
 ## Immediate Observations From This Inspection
 
-- The current homepage already implements the intended intro -> universe -> galaxy -> tool-detail hierarchy.
+- Desktop now preserves the intended intro -> universe -> galaxy -> tool-detail hierarchy.
+- Mobile no longer forces the galaxy interaction model and instead uses a simpler explorer UI.
 - The site is data-driven enough that future content expansion should mostly happen in `scripts/data/universe.js`.
 - The strongest sources of future confusion are the legacy `docs/` publish artifacts and the lack of a formal validation pipeline.

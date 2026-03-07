@@ -4,8 +4,7 @@ export const universeContent = {
   teaser: "A futuristic map of AI tools, topics, and ecosystems.",
   introPrompt:
     "A cinematic command-cosmos built for students who need orientation first, detail second, and clutter nowhere.",
-  enterLabel: "Launch Interface",
-  skipLabel: "Use Recommended Mode",
+  enterLabel: "Enter Experience",
   universeBriefTitle: "Universe Map",
   universeBriefText:
     "Select a galaxy-scale destination to travel deeper. The universe layer shows only major AI sectors by design.",
@@ -21,7 +20,6 @@ export const interfaceModes = {
     title: "PC Command View",
     eyebrow: "Desktop profile",
     summary: "Richer spatial framing built for mouse, wheel, keyboard, and wider command-deck layouts.",
-    enterLabel: "Launch PC Command View",
     introHint: "Scroll, click, and zoom through the AI universe.",
     universeHint: "Wheel to zoom. Click once to focus, then click again or press Enter to enter a galaxy.",
     galaxyHint: "Click tool nodes to inspect them. Wheel out or use Back to retreat to the universe.",
@@ -33,7 +31,6 @@ export const interfaceModes = {
     title: "Mobile Command View",
     eyebrow: "Field device profile",
     summary: "Touch-first framing with tighter information density, mobile-safe panels, and landscape optimization.",
-    enterLabel: "Launch Mobile Command View",
     introHint: "Touch-first galaxy focus with cinematic mobile panels.",
     universeHint: "Tap destinations to focus them, then use the launch card to zoom into a galaxy.",
     galaxyHint: "Tap tool nodes to open their briefing. Use the bottom sheet and back controls to navigate.",

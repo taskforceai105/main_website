@@ -139,16 +139,14 @@ export const renderHeader = (content) => `
       </div>
     </div>
     <div class="app-header__actions">
-      <button class="header-chip header-chip--mode" type="button" data-open-mode>
-        Choose Interface
-      </button>
       <button class="header-chip" type="button" data-open-brief>Universe Brief</button>
+      <span class="header-chip header-chip--mode" data-device-badge>Desktop Universe</span>
       <span class="header-state" data-header-state>${escapeHtml(content.subtitle)}</span>
     </div>
   </header>
 `;
 
-export const renderIntroOverlay = (content, modes) => `
+export const renderIntroOverlay = (content) => `
   <div class="intro-overlay" data-intro-overlay>
     <div class="intro-overlay__backdrop"></div>
     <div class="intro-overlay__panel">
@@ -157,43 +155,16 @@ export const renderIntroOverlay = (content, modes) => `
       <p class="intro-overlay__subtitle">${escapeHtml(content.subtitle)}</p>
       <p class="intro-overlay__copy">${escapeHtml(content.teaser)}</p>
       <p class="intro-overlay__detail">${escapeHtml(content.introPrompt)}</p>
-      <div class="intro-mode-grid">
-        ${Object.values(modes)
-          .map(
-            (mode) => `
-              <button class="mode-card" type="button" data-select-mode="${mode.id}">
-                <span class="mode-card__eyebrow">${escapeHtml(mode.eyebrow)}</span>
-                <strong>${escapeHtml(mode.title)}</strong>
-                <p>${escapeHtml(mode.summary)}</p>
-                <span class="mode-card__footer">${escapeHtml(mode.recommendation)}</span>
-              </button>
-            `,
-          )
-          .join("")}
-      </div>
-      <div class="intro-mode-panel" data-mode-panel>
-        <div class="intro-mode-panel__copy">
-          <span class="panel-kicker" data-mode-panel-kicker>Interface Profile</span>
-          <h3 data-mode-panel-title>Select a command view</h3>
-          <p data-mode-panel-copy>Choose PC or Mobile to load the interface profile that fits your device and control style.</p>
-        </div>
-        <div class="rotate-guidance" data-rotate-guidance hidden>
-          <span class="rotate-guidance__device" aria-hidden="true">
-            <span class="rotate-guidance__frame"></span>
-            <span class="rotate-guidance__glow"></span>
-          </span>
-          <div>
-            <p class="rotate-guidance__title" data-rotate-title></p>
-            <p class="rotate-guidance__copy" data-rotate-copy></p>
-          </div>
+      <div class="intro-mode-panel intro-mode-panel--auto">
+        <div class="intro-mode-panel__copy intro-mode-panel__copy--visible">
+          <span class="panel-kicker">Auto Detected</span>
+          <h3 data-intro-profile-title>Desktop Universe</h3>
+          <p data-intro-profile-copy>Rich cinematic navigation for larger hover-capable environments.</p>
         </div>
       </div>
       <div class="intro-overlay__actions">
-        <button class="scene-button" type="button" data-enter-universe disabled>
+        <button class="scene-button" type="button" data-enter-primary>
           ${escapeHtml(content.enterLabel)}
-        </button>
-        <button class="scene-button scene-button--ghost" type="button" data-use-recommended>
-          ${escapeHtml(content.skipLabel)}
         </button>
       </div>
     </div>
@@ -211,7 +182,67 @@ export const renderUniverseBrief = (content) => `
   </aside>
 `;
 
-export const renderScene = (content, galaxies, modes) => `
+const renderMobileToolCard = (galaxy, planet) => `
+  <button
+    class="mobile-tool-card"
+    type="button"
+    data-mobile-tool
+    data-galaxy-id="${galaxy.id}"
+    data-planet-id="${planet.id}"
+  >
+    <span class="mobile-tool-card__badge mark-badge">
+      ${renderLogoMark(planet.logoKey, planet.name)}
+    </span>
+    <span class="mobile-tool-card__copy">
+      <strong>${escapeHtml(planet.name)}</strong>
+      <span>${escapeHtml(planet.type)}</span>
+      <p>${escapeHtml(planet.description)}</p>
+    </span>
+  </button>
+`;
+
+export const renderMobileExplorer = (content, galaxies, activeGalaxy) => `
+  <section class="mobile-explorer__hero">
+    <span class="panel-kicker">Mobile Explorer</span>
+    <h2>${escapeHtml(content.subtitle)}</h2>
+    <p>${escapeHtml("Explore AI tools and resources through a simplified category directory optimized for touch devices.")}</p>
+  </section>
+
+  <nav class="mobile-category-nav" aria-label="AI categories">
+    ${galaxies
+      .map(
+        (galaxy) => `
+          <button
+            class="mobile-category-chip${galaxy.id === activeGalaxy.id ? " is-active" : ""}"
+            type="button"
+            data-mobile-category
+            data-galaxy-id="${galaxy.id}"
+          >
+            ${escapeHtml(galaxy.title)}
+          </button>
+        `,
+      )
+      .join("")}
+  </nav>
+
+  <section class="mobile-category-panel" style="--focus-accent:${activeGalaxy.accent};">
+    <div class="mobile-category-panel__header">
+      <div>
+        <span class="panel-kicker">Category Focus</span>
+        <h3>${escapeHtml(activeGalaxy.title)}</h3>
+      </div>
+      <span class="mobile-category-panel__badge">${escapeHtml(`${activeGalaxy.planets.length} tools`)}</span>
+    </div>
+    <p class="mobile-category-panel__subtitle">${escapeHtml(activeGalaxy.subtitle)}</p>
+    <p class="mobile-category-panel__copy">${escapeHtml(activeGalaxy.why)}</p>
+  </section>
+
+  <section class="mobile-tool-list" aria-label="${escapeHtml(activeGalaxy.title)} tools">
+    ${activeGalaxy.planets.map((planet) => renderMobileToolCard(activeGalaxy, planet)).join("")}
+  </section>
+`;
+
+export const renderScene = (content, galaxies) => `
   <main class="scene-shell">
     <section class="scene-stage" data-scene-stage>
       ${renderStarLayer(120, "deep")}
@@ -254,12 +285,14 @@ export const renderScene = (content, galaxies, modes) => `
 
       <div class="focus-layer" data-focus-layer aria-live="polite"></div>
 
+      <section class="mobile-explorer" data-mobile-explorer hidden></section>
+
       ${renderUniverseBrief(content)}
 
       <aside class="detail-panel" data-detail-panel hidden></aside>
     </section>
 
-    ${renderIntroOverlay(content, modes)}
+    ${renderIntroOverlay(content)}
   </main>
 `;
 
@@ -333,7 +366,7 @@ export const renderDetailPanel = ({ galaxy, planet, mode }) => {
     <p class="detail-panel__mode-hint">
       ${
         mode === "mobile"
-          ? "Use Close or Back to return to the galaxy view."
+          ? "Use Close or Back to return to the explorer."
           : "Use Close, Back to galaxy, or Escape to dismiss this briefing."
       }
     </p>
@@ -345,7 +378,9 @@ export const renderDetailPanel = ({ galaxy, planet, mode }) => {
       }
       ${
         isPlanet
-          ? `<button class="scene-button scene-button--ghost" type="button" data-back-galaxy>Back to galaxy</button>`
+          ? `<button class="scene-button scene-button--ghost" type="button" data-back-galaxy>${
+              mode === "mobile" ? "Back to explorer" : "Back to galaxy"
+            }</button>`
           : ""
       }
     </div>

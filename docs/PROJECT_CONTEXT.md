@@ -15,24 +15,32 @@ This is not meant to be a full curriculum. The homepage should stay relatively b
 - Premium, elite, technical presentation
 - Minimal clutter
 - Progressive disclosure instead of showing all content at once
+- Different desktop and mobile interaction models when usability demands it
 
-The current hierarchy to preserve is:
+The current hierarchy to preserve is now split by device context:
 
+Desktop / PC:
 1. Intro screen
 2. Universe map
 3. Galaxy drilldown
 4. Tool detail panel
+
+Mobile:
+1. Intro screen
+2. Simplified category explorer
+3. Tool detail panel
 
 ## Why Progressive Disclosure Matters
 
 The homepage concept works only if the user is oriented in layers.
 
 - The intro establishes tone and invites entry.
-- The universe view should stay clean and high-level.
-- The galaxy view is where tool/company nodes appear.
+- On desktop, the universe view should stay clean and high-level.
+- On desktop, the galaxy view is where tool/company nodes appear.
+- On mobile, the explorer should move directly from category selection to readable tool cards.
 - The detail panel is the final layer for specifics and outbound links.
 
-If future edits expose all galaxies, tools, text blocks, and panels at once, the core UX breaks down quickly. The homepage becomes noisy and loses the cinematic drilldown feel.
+If future edits expose all galaxies, tools, text blocks, and panels at once, the core UX breaks down quickly. On desktop the cinematic drilldown feel is lost. On mobile the site simply becomes hard to use.
 
 ## What Earlier Versions Seem To Have Struggled With
 
@@ -47,9 +55,12 @@ Based on the repo history and leftover files, earlier iterations included simple
 The current root homepage implementation is a static HTML/CSS/JS experience with:
 
 - an intro overlay
-- a universe map with galaxy buttons
-- a galaxy drilldown scene with planet/tool nodes
-- a closable detail panel for the selected tool
+- an automatically detected desktop/PC experience
+- an automatically detected mobile explorer experience
+- a universe map with galaxy buttons on desktop
+- a galaxy drilldown scene with planet/tool nodes on desktop
+- a simplified category-and-tool directory on mobile
+- a closable detail panel for the selected tool in both contexts
 - a closable universe brief panel
 - keyboard escape behavior that backs out one layer at a time
 - structured data for galaxy/tool content in `scripts/data/universe.js`
@@ -61,8 +72,9 @@ The rendered experience is driven by `scripts/app.js` state and `scripts/compone
 
 - Keep the site dark, polished, and space-like.
 - Preserve the central "command core" identity treatment unless there is a strong reason to revise it.
-- Keep the universe layer cleaner than galaxy drilldown scenes.
-- Do not reveal planet/tool nodes before a galaxy is selected.
+- Keep the desktop universe layer cleaner than desktop galaxy drilldown scenes.
+- Do not reveal desktop planet/tool nodes before a galaxy is selected.
+- Keep the mobile experience simpler than desktop, even if that means dropping the galaxy metaphor on phones.
 - Preserve closable overlays/panels and non-trapping interaction.
 - Keep copy concise and data-driven.
 
@@ -88,8 +100,9 @@ This is a good pattern to preserve. Future sessions should extend the structured
 ## Known Risks / Regressions To Avoid
 
 - Turning the homepage into a text-heavy lesson page
-- Breaking the intro -> universe -> galaxy -> detail flow
-- Showing planets/tools in the universe view
+- Breaking the desktop intro -> universe -> galaxy -> detail flow
+- Breaking the simplified mobile explorer flow
+- Showing planets/tools in the desktop universe view
 - Introducing UI that cannot be closed
 - Adding fragile remote asset dependencies without local fallback
 - Accidentally treating `docs/` legacy publish files as the main homepage source
