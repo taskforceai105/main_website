@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>Det 105 AI Task Force | Home</title>
+    <title>Det 105 AI Task Force | AI Directory</title>
     <meta
       name="description"
-      content="Det 105 AI Task Force home page with navigation to the AI Directory and future sections."
+      content="Det 105 AI Task Force AI Directory is a clean categorized hub for exploring modern AI tools, platforms, and foundational topics."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,15 +21,23 @@
     <link rel="preload" href="/assets/det105.png" as="image" />
     <link rel="stylesheet" href="/styles.css" />
     <script type="module" src="/scripts/site-nav.js"></script>
+    <script type="module" src="/scripts/app.js"></script>
   </head>
   <body>
     <div data-site-nav></div>
-    <main class="landing-home">
-      <section class="landing-home__panel">
-        <span class="panel-kicker">Landing Shell</span>
-        <h1>Det 105 AI Task Force</h1>
-        <p>This home page is intentionally minimal for now.</p>
-      </section>
-    </main>
+    <div id="app"></div>
+    <noscript>
+      <main class="noscript-shell">
+        <img
+          src="/assets/det105.png"
+          alt="Det 105 AI Task Force emblem"
+          class="noscript-image"
+        />
+        <p class="noscript-copy">
+          Enable JavaScript to view the interactive Det 105 AI Task Force AI
+          Directory.
+        </p>
+      </main>
+    </noscript>
   </body>
 </html>

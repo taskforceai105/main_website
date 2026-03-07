@@ -1,9 +1,10 @@
 # Det 105 AI Task Force
 
-A clean static homepage for the Det 105 AI Task Force website. The current version is a shared responsive AI directory with:
+A clean static website for the Det 105 AI Task Force. The current version includes:
 
-- a branded hero and category overview
-- sticky search/filter navigation
+- a minimal landing homepage at `/`
+- a shared top navigation bar
+- an AI directory at `/ai-directory/`
 - categorized tool sections with 50+ real items
 - a responsive detail drawer / bottom sheet
 
@@ -16,6 +17,9 @@ python3 -m http.server 4173
 ```
 
 Then open `http://localhost:4173`.
+
+- Home: `http://localhost:4173/`
+- AI Directory: `http://localhost:4173/ai-directory/`
 
 ## Edit content
 

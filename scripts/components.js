@@ -35,7 +35,7 @@ export const renderMarkBadge = (logoKey, label, extraClass = "") => {
   return `
     <span class="${className}">
       <img
-        src="${logo.src}"
+        src="${logo.src.startsWith("/") ? logo.src : `/${logo.src}`}"
         alt="${escapeHtml(logo.alt)}"
         class="mark-badge__image mark-badge__image--${logo.fit}"
         loading="lazy"
@@ -127,21 +127,6 @@ const renderDirectorySection = (section, items) => `
 
 export const renderAppShell = (content, stats) => `
   <div class="site-shell">
-    <header class="site-header">
-      <a class="site-brand" href="#top" aria-label="Back to top">
-        <span class="site-brand__crest">
-          <img src="assets/det105.png" alt="" />
-        </span>
-        <span class="site-brand__copy">
-          <span class="site-brand__eyebrow">Det 105 AI Task Force</span>
-          <strong>AI Directory</strong>
-        </span>
-      </a>
-      <button class="header-button" type="button" data-browse-directory>
-        Browse categories
-      </button>
-    </header>
-
     <main class="page-shell" id="top">
       <section class="hero-panel">
         <div class="hero-panel__copy">

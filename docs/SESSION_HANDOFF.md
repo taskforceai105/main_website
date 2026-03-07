@@ -7,7 +7,7 @@ This repo is currently a static site, not a framework app.
 - No `package.json`
 - No Node/Vite/Next/Astro build pipeline
 - Netlify config in `netlify.toml` publishes the repository root
-- Primary homepage entry is root `index.html`
+- Primary landing page entry is root `index.html`
 
 ## Framework / Stack
 
@@ -19,10 +19,13 @@ This repo is currently a static site, not a framework app.
 
 ## Key Directories And Files
 
-- `index.html`: main deployed page
-- `styles.css`: primary site stylesheet for the live directory layout
+- `index.html`: minimal landing homepage
+- `ai-directory/index.html`: live AI directory page
+- `option-a/index.html` through `option-e/index.html`: simple placeholder pages linked from the nav
+- `styles.css`: primary site stylesheet for the landing page, shared nav, placeholders, and AI directory
 - `scripts/app.js`: app state, search/filter logic, detail panel state, and event wiring
 - `scripts/components.js`: render functions for header, hero, category overview, toolbar, cards, detail panel, and footer
+- `scripts/site-nav.js`: shared top navigation renderer and mobile menu behavior
 - `scripts/data/universe.js`: site copy plus structured tool/category data
 - `scripts/data/logo-sources.js`: logo catalog and source metadata
 - `assets/det105.png`: current brand/crest image used in the header
@@ -31,9 +34,14 @@ This repo is currently a static site, not a framework app.
 
 ## Homepage Components / Experience
 
-The homepage is currently composed from these major UI layers:
+The root homepage is currently composed from:
 
-- Sticky header with Det 105 branding and browse button
+- Shared top navigation
+- Minimal landing panel with intentionally sparse content
+
+The AI directory page at `/ai-directory/` is composed from:
+
+- Shared top navigation
 - Hero with concise intro copy and summary stats
 - Category overview cards
 - Sticky search/filter toolbar
@@ -52,7 +60,9 @@ State lives in `scripts/app.js`:
 
 Important flow behavior:
 
-- The page loads directly into the directory experience.
+- The root route `/` loads a minimal landing page.
+- The AI directory lives at `/ai-directory/`.
+- Placeholder pages live at `/option-a/` through `/option-e/`.
 - There is no manual device-mode selection.
 - There is no fullscreen launch, boot sequence, map camera, or phase-based scene flow anymore.
 - Search and category filters update the featured set and section content.
@@ -114,7 +124,8 @@ Note:
 ## Deployment Notes
 
 - Netlify publishes `.` with no build command.
-- Root `index.html` is the canonical homepage for Netlify.
+- Root `index.html` is the canonical landing homepage for Netlify.
+- The AI directory is a separate static route under `ai-directory/`.
 - There is also a `docs/` directory from earlier GitHub Pages-oriented work:
   - `docs/index.html` points back to root assets via `<base href="../" />`
   - `docs/styles.css` appears to be an old/stale stylesheet and is not the root homepage stylesheet
@@ -157,15 +168,17 @@ This simplification pass was validated with:
 3. `docs/NEXT_STEPS.md`
 4. `docs/SESSION_HANDOFF.md`
 5. `index.html`
-6. `scripts/app.js`
-7. `scripts/components.js`
-8. `scripts/data/universe.js`
-9. `scripts/data/logo-sources.js`
-10. `styles.css`
+6. `ai-directory/index.html`
+7. `scripts/site-nav.js`
+8. `scripts/app.js`
+9. `scripts/components.js`
+10. `scripts/data/universe.js`
+11. `scripts/data/logo-sources.js`
+12. `styles.css`
 
 ## Immediate Observations From This Inspection
 
-- The live site has been deliberately reset from the fragile desktop map/fullscreen architecture into a simpler directory UI.
+- The live site has been deliberately reset from the fragile desktop map/fullscreen architecture into a simpler landing-plus-directory structure.
 - Desktop and mobile now share the same structure instead of diverging into separate products.
 - The best future improvements are now around polish, logo quality, search/filter UX, and data maintenance rather than scene architecture.
 - The strongest sources of future confusion are the older map-era data still present in `scripts/data/universe.js` and the legacy `docs/` publish artifacts.

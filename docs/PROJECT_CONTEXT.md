@@ -31,9 +31,15 @@ The current site should feel like a premium AI directory, not a game or simulati
 
 ## What The Current Site Already Does
 
-The current root homepage implementation is a static HTML/CSS/JS experience with:
+The current root homepage implementation is now split into:
 
-- a branded header and hero
+- a minimal landing home page at `/`
+- a separate AI directory page at `/ai-directory/`
+
+The AI directory route is a static HTML/CSS/JS experience with:
+
+- a shared top navigation bar
+- a branded hero and summary stats
 - category overview cards
 - a sticky search/filter toolbar
 - a featured-tools section
@@ -100,8 +106,10 @@ This is the pattern to preserve. Future sessions should extend the structured da
 ## Architecture Snapshot
 
 - Stack: plain static HTML, CSS, and ES modules
-- Entry point: `index.html`
+- Root landing page: `index.html`
+- AI directory page: `ai-directory/index.html`
 - Main state logic: `scripts/app.js`
+- Shared nav logic: `scripts/site-nav.js`
 - Render helpers: `scripts/components.js`
 - Content/config: `scripts/data/universe.js`, `scripts/data/logo-sources.js`
 - Primary stylesheet: `styles.css`

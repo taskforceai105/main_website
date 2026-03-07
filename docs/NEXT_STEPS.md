@@ -3,6 +3,8 @@
 Note:
 The live site has been simplified into one responsive categorized AI directory. Future sessions should improve that system rather than reviving the removed fullscreen/map/boot architecture.
 
+The site now also has a separate minimal landing page at `/` and a shared top navigation bar. Future sessions should preserve that split unless the user explicitly wants another routing change.
+
 ## Must-Haves
 
 ### 1. Finalize real-device responsive polish

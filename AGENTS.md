@@ -2,7 +2,7 @@
 
 ## Repository Purpose
 
-This repo contains the Det 105 AI Task Force website homepage. It is a static, Netlify-compatible AI directory for students in Det 105 to explore real AI tools, platforms, and foundational topics without turning the homepage into a full course or a long text wall.
+This repo contains the Det 105 AI Task Force website. It is a static, Netlify-compatible site with a minimal landing homepage plus a separate AI directory route for students in Det 105 to explore real AI tools, platforms, and foundational topics without turning the site into a full course or a long text wall.
 
 ## Product Vision
 
@@ -14,17 +14,20 @@ This repo contains the Det 105 AI Task Force website homepage. It is a static, N
 
 ## Current UX Model
 
-The live homepage is now one responsive directory system shared across desktop and mobile:
+The live site now has two top-level page types:
 
-- Header with Det 105 branding and a browse button
+- `/`: a minimal landing homepage with shared top navigation
+- `/ai-directory/`: the responsive AI directory experience
+
+The AI directory itself remains one shared responsive system across desktop and mobile:
+
+- Shared top navigation
 - Hero section with concise intro copy and summary stats
 - Category overview cards
 - Sticky search/filter toolbar
 - Featured tools section
 - Category sections with tool cards
 - Closable detail drawer / bottom sheet
-
-Desktop and mobile now share the same information architecture. Desktop gets more space and columns; mobile gets the same content model in a simpler stacked layout. There is no fullscreen launch, no boot sequence, no galaxy drilldown, and no heavy desktop-only map path in the live UI anymore.
 
 ## Design Principles
 
@@ -57,8 +60,10 @@ Desktop and mobile now share the same information architecture. Desktop gets mor
   - `docs/RESOURCE_AUDIT.md`
 - Inspect the current homepage implementation before making changes:
   - `index.html`
+  - `ai-directory/index.html`
   - `scripts/app.js`
   - `scripts/components.js`
+  - `scripts/site-nav.js`
   - `scripts/data/universe.js`
   - `scripts/data/logo-sources.js`
   - `styles.css`
@@ -85,7 +90,8 @@ Desktop and mobile now share the same information architecture. Desktop gets mor
 
 ## What Not To Break
 
-- The clean categorized directory structure.
+- The minimal root homepage and shared top navigation.
+- The clean categorized AI directory structure at `/ai-directory/`.
 - Responsive desktop/mobile behavior with the same shared content model.
 - Sticky search/filter toolbar and category navigation.
 - Closable detail drawer / bottom sheet behavior.
