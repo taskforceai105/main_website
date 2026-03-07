@@ -23,7 +23,12 @@ Then open `http://localhost:4173`.
 
 ## GitHub Pages deployment
 
-This repo now deploys to GitHub Pages through GitHub Actions.
+This repo is intended to deploy to the GitHub Pages user-site repository:
+
+- Primary public URL: `https://ai-det105.github.io/`
+- Repository name: `ai-det105.github.io`
+
+Deployment uses GitHub Actions.
 
 - Workflow: `.github/workflows/deploy-pages.yml`
 - Static build artifact: `dist/`
@@ -33,9 +38,11 @@ The build is intentionally lightweight. It copies the static site into `dist/` a
 
 Important notes:
 
-- The site is configured for GitHub Pages project-path hosting such as `/main_website/`.
-- Shared nav links and logo paths detect the Pages base path automatically at runtime.
+- The live deployment target is root-path hosting at `https://ai-det105.github.io/`.
+- Shared nav links and logo paths are root-safe and still tolerate subpath preview environments.
 - In the GitHub repository settings, set `Pages` to deploy from `GitHub Actions`.
+- The older `main_website` project repo is no longer meant to be the primary public Pages URL.
+- If the `ai-det105.github.io` repository does not exist yet, create it under the `ai-det105` account, push `main`, and then enable `Pages -> GitHub Actions`.
 
 ## Edit content
 

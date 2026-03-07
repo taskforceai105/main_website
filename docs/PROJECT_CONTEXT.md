@@ -115,7 +115,7 @@ This is the pattern to preserve. Future sessions should extend the structured da
 - Render helpers: `scripts/components.js`
 - Content/config: `scripts/data/universe.js`, `scripts/data/logo-sources.js`
 - Primary stylesheet: `styles.css`
-- GitHub Pages deployment: GitHub Actions builds a `dist/` artifact with `python3 scripts/build_pages.py`
+- GitHub Pages deployment: GitHub Actions builds a `dist/` artifact with `python3 scripts/build_pages.py` for the root-domain user site `https://ai-det105.github.io/`
 
 ## Known Risks / Regressions To Avoid
 
@@ -126,7 +126,7 @@ This is the pattern to preserve. Future sessions should extend the structured da
 - Leaving broken logo states in the UI
 - Adding fragile remote asset dependencies without local fallback
 - Accidentally treating `docs/` legacy publish files as the main homepage source
-- Reintroducing root-only path assumptions that break under GitHub Pages project-path hosting
+- Reintroducing old `main_website` project-path assumptions into the live user-site deployment
 
 ## Uncertainty To Keep In Mind
 

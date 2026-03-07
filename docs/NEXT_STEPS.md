@@ -107,12 +107,13 @@ Acceptance criteria:
 
 - `python3 scripts/build_pages.py` continues producing a valid `dist/` artifact.
 - The GitHub Pages workflow remains valid and aligned with the actual output directory.
+- Root-domain hosting at `https://ai-det105.github.io/` remains correct for assets and routes.
 - Changes do not introduce an unnecessary framework/toolchain dependency.
 
 Regression warnings:
 
 - Do not add a framework/toolchain unless the user explicitly wants that tradeoff.
-- Do not break project-path asset or navigation handling for GitHub Pages.
+- Do not reintroduce `main_website`-style project-path assumptions into the live deployment.
 - Do not make `docs/` the accidental source of truth for deployment.
 
 ## Nice-To-Haves

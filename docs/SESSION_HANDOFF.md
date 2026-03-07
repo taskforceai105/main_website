@@ -26,7 +26,7 @@ This repo is currently a static site, not a framework app.
 - `scripts/app.js`: app state, search/filter logic, detail panel state, and event wiring
 - `scripts/components.js`: render functions for header, hero, category overview, toolbar, cards, detail panel, and footer
 - `scripts/site-nav.js`: shared top navigation renderer and mobile menu behavior
-- `scripts/site-paths.js`: runtime base-path detection for GitHub Pages project-path hosting
+- `scripts/site-paths.js`: runtime path helper that keeps root-domain hosting correct and still tolerates subpath previews
 - `scripts/build_pages.py`: lightweight build script that copies the deployable site into `dist/`
 - `scripts/data/universe.js`: site copy plus structured tool/category data
 - `scripts/data/logo-sources.js`: logo catalog and source metadata
@@ -128,9 +128,10 @@ Note:
 - GitHub Pages deployment uses `.github/workflows/deploy-pages.yml`.
 - The build step is `python3 scripts/build_pages.py`.
 - The static output directory is `dist/`.
+- The intended primary public URL is `https://ai-det105.github.io/`.
 - Root `index.html` is still the canonical source landing page in the repo.
 - The AI directory is a separate static route under `ai-directory/`.
-- Runtime nav/logo paths are GitHub Pages-aware through `scripts/site-paths.js`.
+- Runtime nav/logo paths stay root-safe through `scripts/site-paths.js`.
 - There is also a `docs/` directory from earlier publishing experiments:
   - `docs/index.html` points back to root assets via `<base href="../" />`
   - `docs/styles.css` appears to be an old/stale stylesheet and is not the root homepage stylesheet
@@ -165,7 +166,7 @@ This simplification pass was validated with:
 - JS module import smoke check for `scripts/site-nav.js` and `scripts/site-paths.js`
 - JS data import check confirming `directoryItems.length === 56`
 - `python3 scripts/build_pages.py`
-- local HTTP verification of `/main_website/` and `/main_website/ai-directory/` through a simulated GitHub Pages project path
+- local HTTP verification of `/` and `/ai-directory/` for root hosting, plus a subpath sanity check through the path helper
 
 ## What A New Session Should Inspect First
 
