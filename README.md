@@ -1,10 +1,9 @@
 # Det 105 AI Task Force
 
-An immersive static homepage for the Det 105 AI Task Force website. The current version is a cinematic 3-state AI universe experience built for Netlify deployment:
+An immersive static homepage for the Det 105 AI Task Force website. The current version automatically adapts between:
 
-- Intro screen
-- Universe map
-- Galaxy drilldown
+- a desktop launch flow with landing intro, boot sequence, and connected AI universe map
+- a simplified mobile explorer with category cards and tool detail sheets
 
 ## Local preview
 

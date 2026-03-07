@@ -22,8 +22,8 @@ This repo is currently a static site, not a framework app.
 - `index.html`: main deployed page
 - `styles.css`: primary site stylesheet
 - `scripts/app.js`: app state, interactions, transitions, event wiring
-- `scripts/components.js`: HTML render functions for header, intro, universe, galaxy, detail panel, footer
-- `scripts/data/universe.js`: universe copy plus galaxy/tool definitions
+- `scripts/components.js`: HTML render functions for header, landing intro, boot overlay, desktop universe, mobile explorer, detail panel, footer
+- `scripts/data/universe.js`: universe copy plus mobile galaxy/tool definitions and desktop connected-map definitions
 - `scripts/data/logo-sources.js`: logo catalog and source metadata
 - `assets/det105.png`: current brand/crest image used in header and command core
 - `assets/logos/`: local logo copies and fallbacks
@@ -34,10 +34,9 @@ This repo is currently a static site, not a framework app.
 The homepage is currently composed from these major UI layers:
 
 - Header with brand, universe-brief toggle, and status text
-- Main scene stage with stars, nebulae, grid, command core, and galaxy nodes
+- Main scene stage with stars, nebulae, grid, boot overlay, desktop connected map, and mobile explorer
 - Intro overlay
 - Universe brief panel
-- Focus layer for selected galaxy
 - Detail panel for selected tool/node
 - Footer
 
@@ -46,12 +45,14 @@ The homepage is currently composed from these major UI layers:
 State lives in `scripts/app.js`:
 
 - `deviceMode`: `"pc"` or `"mobile"`
-- `phase`: `"intro"`, `"universe"`, `"galaxy"`, or `"mobile"`
+- `phase`: `"intro"`, `"boot"`, `"desktop"`, or `"mobile"`
 - `selectedGalaxyId`
-- `focusedGalaxyId`
-- `selectedPlanetId`
+- `selectedToolId`
 - `universeBriefOpen`
-- `universeZoom`: `"overview"` or `"focused"`
+- `bootStepIndex`
+- `bootProgress`
+- `desktopView`: bounded pan/zoom state for the desktop map
+- `pointerDrag`: active drag state for the desktop map
 - `transitionLock`
 
 Important flow behavior:
@@ -59,21 +60,19 @@ Important flow behavior:
 - Default state is `phase: "intro"`.
 - Device mode is now chosen automatically from viewport, pointer/hover capability, touch capability, and a user-agent fallback.
 - There is no longer a manual PC/Mobile selector.
-- Desktop flow moves from intro to universe, then galaxy, then detail.
+- Desktop flow moves from intro to boot, then a connected desktop map, then detail.
 - Mobile flow moves from intro to a simplified explorer, then detail.
-- `enterGalaxy(galaxyId)` is desktop-only and clears selected tool state.
-- In galaxy phase or mobile explorer phase, clicking/tapping a tool opens the detail panel.
-- Backing out from galaxy view returns to universe with a timed transition.
+- Desktop CTA attempts fullscreen if possible before starting the boot sequence.
+- Desktop map uses bounded drag and wheel zoom rather than the old galaxy drilldown route.
+- On desktop, clicking a node recenters the map and opens the detail panel.
 - Escape key exits the deepest currently open layer first.
-- Desktop wheel input still participates in the current zoom/focus model.
 - Mobile no longer relies on galaxy-map gestures for core navigation.
 
 There is also a debug URL helper:
 
-- `?phase=universe`
-- `?phase=universe&brief=open`
-- `?phase=galaxy&galaxy=<id>`
-- `?phase=galaxy&galaxy=<id>&planet=<id>`
+- `?phase=boot`
+- `?phase=desktop`
+- `?phase=desktop&node=<id>`
 - `?phase=mobile&galaxy=<id>`
 - `?phase=mobile&galaxy=<id>&planet=<id>`
 - `?mode=pc` or `?mode=mobile` can still be used as a debug override for testing render paths
@@ -92,6 +91,26 @@ There is also a debug URL helper:
   - `learning`
 
 Each galaxy includes title/subtitle, accent colors, universe position, focus copy, and a `planets` array containing node position, size, description, reason-for-use text, and official outbound link.
+
+The same file now also defines desktop connected-map content:
+
+- `desktopUniverseDimensions`
+- `desktopUniverseRegions`
+- `desktopUniverseNodes`
+
+Each desktop node includes:
+
+- `id`
+- `name`
+- `type`
+- `regionId`
+- `x` / `y`
+- `importance`
+- `description`
+- `goodFor`
+- `href`
+- `logoKey`
+- `relatedNodeIds`
 
 ## Asset / Logo Handling
 
@@ -131,12 +150,13 @@ Current implementation details:
   - touch capability
   - mobile user-agent fallback
 - The app updates when resize/orientation changes produce a real mode change.
-- Desktop keeps the cinematic universe + galaxy drilldown interaction model.
+- Desktop now uses a single connected 2.5D AI universe map rather than separate live galaxy destination pages.
+- Desktop tries fullscreen on launch, but gracefully continues when fullscreen is denied.
 - Mobile uses a simplified category explorer with chips, tool cards, and a mobile-safe detail sheet.
 
 Current responsive/layout strategy in `styles.css`:
 
-- Desktop/PC mode preserves the richer spatial composition and zoom/focus behavior.
+- Desktop/PC mode preserves the richer spatial composition through a bounded map viewport with drag and wheel zoom.
 - Mobile intro is simpler and auto-detected.
 - Mobile `phase="mobile"` hides the desktop map layers and shows the simplified explorer instead.
 - The mobile detail panel is still fixed/bounded for viewport safety.
@@ -152,7 +172,8 @@ Current responsive/layout strategy in `styles.css`:
 
 Current real-device follow-up notes:
 
-- The mobile intro and explorer are now much simpler, but should still be checked on actual iPhone/Android hardware for final spacing and scroll feel.
+- The desktop connected map is browser-validated in headless Chrome, but still merits real-device mouse/trackpad testing for pan/zoom feel.
+- The mobile intro and explorer are much simpler, but should still be checked on actual iPhone/Android hardware for final spacing and scroll feel.
 - Low-height landscape mobile is serviceable, but still merits real-device polish after live touch testing.
 
 ## What A New Session Should Inspect First
@@ -170,7 +191,7 @@ Current real-device follow-up notes:
 
 ## Immediate Observations From This Inspection
 
-- Desktop now preserves the intended intro -> universe -> galaxy -> tool-detail hierarchy.
+- Desktop now preserves the intended intro -> boot -> connected map -> tool-detail hierarchy.
 - Mobile no longer forces the galaxy interaction model and instead uses a simpler explorer UI.
 - The site is data-driven enough that future content expansion should mostly happen in `scripts/data/universe.js`.
 - The strongest sources of future confusion are the legacy `docs/` publish artifacts and the lack of a formal validation pipeline.

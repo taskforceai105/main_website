@@ -16,24 +16,26 @@ This repo contains the Det 105 AI Task Force website homepage. It is currently a
 
 The repo now supports two automatically selected experiences:
 
-- Desktop / PC: intro -> universe map -> galaxy drilldown -> tool detail
+- Desktop / PC: landing intro -> boot/loading cinematic -> connected universe map -> tool detail
 - Mobile: intro -> simplified category explorer -> tool detail
 
-Preserve the rule that users should not see every layer at once, but do not force the desktop galaxy interaction model onto phones.
+Preserve the rule that users should not see every layer at once, but do not force the desktop map interaction model onto phones.
 
 Current implementation already follows this split:
 
 - Intro overlay is the initial state for both device contexts.
-- Desktop keeps the cinematic universe and galaxy drilldown flow.
+- Desktop uses one connected AI universe scene instead of separate live galaxy destination pages.
+- Desktop entry attempts fullscreen and then runs a short boot/loading sequence before the interactive map appears.
+- Desktop nodes live in one bounded 2.5D map with drag and wheel zoom rather than separate drilldown pages.
 - Mobile uses a simplified explorer with category chips and tool cards.
 - Tool details open in a closable panel/sheet in both contexts.
 - Escape closes the deepest open layer first on desktop keyboards.
 
 ## Design Principles
 
-- Keep the universe layer cleaner than the galaxy layer.
-- Do not expose planet/tool nodes in the universe view.
-- Galaxy selection should feel like a dramatic zoom / drilldown transition.
+- Keep the desktop map cleaner than the detail layer.
+- Do not let node labels, overlays, or webbing turn the desktop universe into unreadable soup.
+- Desktop entry and transitions should feel cinematic, but smoothness and browser stability win over heavier effects.
 - On mobile, prefer clarity over preserving the spatial galaxy metaphor.
 - Tool/company nodes should be more interesting than plain spheres when improved, but changes must stay coherent with the current visual system.
 - Keep overlays and panels closable. No blocking UI that traps the user.
@@ -87,9 +89,10 @@ Current implementation already follows this split:
 ## What Not To Break
 
 - Automatic device detection between desktop and mobile.
-- The desktop progressive-disclosure flow: intro -> universe -> galaxy -> tool detail.
+- The desktop progressive-disclosure flow: intro -> boot -> connected map -> tool detail.
 - The simplified mobile explorer flow.
-- The rule that planet/tool nodes stay hidden until a galaxy is selected.
+- The connected desktop universe map in `scripts/data/universe.js`.
+- Bounded desktop pan/zoom behavior and the fullscreen-first entry flow.
 - The dark cinematic visual language.
 - Closable overlays, modals, and panels.
 - Structured content data in `scripts/data/universe.js`.

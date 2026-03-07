@@ -45,6 +45,24 @@ export const logoCatalog = {
     note: "Official public favicon referenced from Qwen's public frontend assets.",
     official: true,
   },
+  deepseek: {
+    type: "monogram",
+    text: "DS",
+    note: "Deliberate monogram fallback for DeepSeek pending a cleaner stable local product mark.",
+    official: false,
+  },
+  kimi: {
+    type: "monogram",
+    text: "KM",
+    note: "Deliberate monogram fallback for Kimi pending a cleaner stable local product mark.",
+    official: false,
+  },
+  minimax: {
+    type: "monogram",
+    text: "MM",
+    note: "Deliberate monogram fallback for MiniMax pending a cleaner stable local product mark.",
+    official: false,
+  },
   perplexity: {
     type: "image",
     src: "assets/logos/perplexity.ico",

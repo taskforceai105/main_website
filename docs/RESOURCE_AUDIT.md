@@ -22,6 +22,9 @@ This file records the current outbound resources and brand-asset decisions for t
 - `Claude`: `https://www.anthropic.com/claude`
 - `Grok`: `https://x.ai/grok`
 - `Qwen`: `https://qwen.ai/`
+- `DeepSeek`: `https://www.deepseek.com/`
+- `Kimi`: `https://kimi.com/`
+- `MiniMax`: `https://www.minimax.io/`
 - `Codex CLI`: `https://github.com/openai/codex`
 - `Cursor`: `https://www.cursor.com/`
 - `Gemini CLI`: `https://github.com/google-gemini/gemini-cli`
@@ -42,6 +45,7 @@ This file records the current outbound resources and brand-asset decisions for t
 ## Current Asset Notes
 
 - Most brand marks now use local files under `assets/logos/`.
+- `DeepSeek`, `Kimi`, and `MiniMax` are now present in the desktop connected map and currently use deliberate monogram fallbacks.
 - Newly added local assets in this pass:
   - `github.svg`
   - `elicit.ico`

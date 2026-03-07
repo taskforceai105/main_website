@@ -1,16 +1,16 @@
 # Next Steps
 
 Note:
-The current codebase now auto-detects desktop vs mobile and intentionally serves two different experiences. Future sessions should verify/polish that split on real devices rather than assuming mobile still uses the galaxy-map interaction model.
+The current codebase auto-detects desktop vs mobile and now intentionally serves a strong desktop command-map experience plus a simpler mobile directory. Future sessions should verify/polish that split on real devices rather than assuming both modes share the same interaction model.
 
 ## Must-Haves
 
-### 1. Finalize mobile explorer polish
+### 1. Finalize mobile explorer landscape polish
 
 Priority: Highest
 
 Goal:
-Finish the remaining mobile explorer polish so portrait and rotated-phone views feel fully deliberate instead of just mostly corrected.
+Finish the remaining mobile explorer polish so portrait and rotated-phone views feel fully deliberate instead of just workable.
 
 Acceptance criteria:
 
@@ -24,69 +24,69 @@ Regression warnings:
 - Do not collapse Mobile Explorer back into the desktop universe composition.
 - Do not reintroduce map-style node clutter or gesture-heavy navigation on phones.
 
-### 2. Reduce desktop universe-level clutter
+### 2. Refine desktop connected-map readability
 
 Priority: Highest
 
 Goal:
-Keep the universe map readable and dramatic, with galaxy destinations only and no premature detail spillover.
+Keep the connected desktop AI universe readable and dramatic while preserving the new single-scene architecture.
 
 Acceptance criteria:
 
-- Desktop universe view remains visually cleaner than galaxy drilldown.
-- No planet/tool nodes appear until a galaxy is selected.
-- Additional labels, copy, or chrome do not crowd the main stage.
-- Any new informational UI in universe view is optional and closable.
+- Region halos, node labels, and relationship webbing remain legible at the default view.
+- The default camera framing shows the whole ecosystem comfortably on common desktop sizes.
+- Added labels, copy, or chrome do not crowd the main stage.
+- Any new informational UI remains optional and closable.
 
 Regression warnings:
 
-- Do not turn the desktop universe view into a dense dashboard.
-- Do not add persistent panels that fight the map for attention.
+- Do not turn the map into a dense dashboard.
+- Do not add heavy visual effects that compromise frame pacing.
 
-### 3. Strengthen the intro overlay
+### 3. Strengthen desktop node polish
 
 Priority: High
 
 Goal:
-Make the first-screen moment feel more intentional and cinematic while staying concise.
+Improve node treatment, hover/focus response, and cluster distinction without adding GPU-heavy effects.
 
 Acceptance criteria:
 
-- Intro remains the default entry state.
-- Copy stays brief and orientation-focused.
-- The primary action clearly leads into the universe experience.
-- Users can still bypass or exit the intro path cleanly.
+- Node selection feels clearly intentional.
+- Related-node highlighting remains subtle but informative.
+- Region identity is clear without giant labels.
+- The detail panel continues to stay fully on-screen.
 
 Regression warnings:
 
-- Do not overload the intro with long explanations.
-- Do not create an intro that traps the user or blocks recovery.
+- Do not turn node styling into a noisy glow-fest.
+- Do not break the current bounded pan/zoom behavior.
 
-### 4. Improve universe -> galaxy drilldown transitions
+### 4. Tune desktop launch flow
 
 Priority: High
 
 Goal:
-Make galaxy selection feel like a dramatic zoom/travel event rather than a simple view swap.
+Keep the desktop landing -> fullscreen attempt -> boot -> map flow polished and reliable.
 
 Acceptance criteria:
 
-- Galaxy click produces a clear drilldown transition.
-- The selected galaxy feels like the destination anchor.
-- Returning to universe view remains clear and reliable.
+- Clicking the main CTA attempts fullscreen without breaking when denied.
+- The boot sequence stays short and feels integrated with the launch flow.
+- Transition timing still feels smooth on mainstream desktop browsers.
 - Motion still respects reduced-motion preferences.
 
 Regression warnings:
 
-- Do not remove the clear back path to universe view.
-- Do not break the current transition lock/state flow in `scripts/app.js`.
+- Do not turn the boot layer into a long blocking splash screen.
+- Do not let fullscreen assumptions break the non-fullscreen fallback.
 
 ### 5. Improve node/logo presentation
 
 Priority: High
 
 Goal:
-Evolve planet/tool nodes beyond simple spheres while staying polished and production-safe.
+Evolve map nodes beyond simple badges while staying polished and production-safe.
 
 Acceptance criteria:
 
@@ -100,7 +100,7 @@ Regression warnings:
 - Do not hotlink fragile assets into production casually.
 - Do not mix inconsistent logo treatments that make the galaxy feel amateurish.
 
-### 6. Refine content/data structure
+### 6. Expand and maintain desktop universe content
 
 Priority: Medium
 
@@ -110,6 +110,7 @@ Keep homepage content maintainable through structured data instead of spreading 
 Acceptance criteria:
 
 - New galaxy/tool content stays primarily in `scripts/data/universe.js`.
+- New connected-map nodes stay in the desktop universe arrays in `scripts/data/universe.js`.
 - Logo/source metadata stays in `scripts/data/logo-sources.js` or supporting asset notes.
 - Render logic remains mostly presentational.
 
@@ -137,14 +138,14 @@ Regression warnings:
 
 ## Nice-To-Haves
 
-- Add a more dramatic galaxy-selection visual accent without increasing clutter.
-- Polish the new mobile explorer layout and landscape framing after real-device review.
+- Add subtle map home/focus affordances for keyboard users on desktop.
+- Polish the mobile explorer landscape framing after real-device review.
 - Audit whether unused legacy assets/files in `docs/` should be cleaned up in a future focused pass.
 - Add a clearer content-editing note for non-code maintainers if the structured data grows.
 
 ## Do Not Regress
 
-- Intro -> universe -> galaxy -> detail hierarchy
+- Intro -> boot -> connected desktop map -> detail hierarchy
 - Automatic desktop vs mobile experience detection
 - Simplified mobile explorer flow
 - Closable overlays and panels

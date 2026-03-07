@@ -20,3 +20,11 @@ Local logo files in this directory are used to avoid fragile remote hotlinks in 
 - `lmstudio.ico`: `https://lmstudio.ai/favicon.ico`
 
 Nodes without a clean, reliable public product asset use deliberate monogram fallbacks defined in `scripts/data/logo-sources.js`.
+
+Current monogram fallbacks include:
+
+- `DeepSeek`
+- `Kimi`
+- `MiniMax`
+- `NotebookLM`
+- fundamentals / practice nodes such as `Prompting` and `Best Practices`

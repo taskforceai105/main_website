@@ -21,8 +21,8 @@ The current hierarchy to preserve is now split by device context:
 
 Desktop / PC:
 1. Intro screen
-2. Universe map
-3. Galaxy drilldown
+2. Boot / loading cinematic
+3. Connected universe map
 4. Tool detail panel
 
 Mobile:
@@ -35,8 +35,9 @@ Mobile:
 The homepage concept works only if the user is oriented in layers.
 
 - The intro establishes tone and invites entry.
-- On desktop, the universe view should stay clean and high-level.
-- On desktop, the galaxy view is where tool/company nodes appear.
+- On desktop, the landing page should stay concise and branded.
+- On desktop, the boot/loading layer should be short and polished.
+- On desktop, the connected map should reveal one shared AI ecosystem without dumping all explanation into the viewport.
 - On mobile, the explorer should move directly from category selection to readable tool cards.
 - The detail panel is the final layer for specifics and outbound links.
 
@@ -47,8 +48,8 @@ If future edits expose all galaxies, tools, text blocks, and panels at once, the
 Based on the repo history and leftover files, earlier iterations included simpler landing-page/static-image approaches and GitHub Pages-oriented publish artifacts. The current codebase is already a more intentional interactive version, but a few risks remain:
 
 - `docs/` still contains older publish-oriented files that can confuse future sessions.
-- The universe layer can still become visually busy if more labels or nodes are added casually.
-- Planet/tool nodes currently use circular logo badges; this works, but the product direction still wants more visually interesting node treatment over time.
+- The desktop map can become visually busy if more labels, lines, or node effects are added casually.
+- The desktop map is now a bounded 2.5D command field rather than separate live galaxy scenes, so future edits should respect the performance tradeoffs that made that choice practical.
 
 ## What The Current Site Already Does
 
@@ -57,8 +58,9 @@ The current root homepage implementation is a static HTML/CSS/JS experience with
 - an intro overlay
 - an automatically detected desktop/PC experience
 - an automatically detected mobile explorer experience
-- a universe map with galaxy buttons on desktop
-- a galaxy drilldown scene with planet/tool nodes on desktop
+- a fullscreen-attempt desktop launch flow
+- a short boot/loading cinematic on desktop
+- a connected desktop AI universe map with region clusters, relationship webbing, drag, and wheel zoom
 - a simplified category-and-tool directory on mobile
 - a closable detail panel for the selected tool in both contexts
 - a closable universe brief panel
@@ -72,8 +74,8 @@ The rendered experience is driven by `scripts/app.js` state and `scripts/compone
 
 - Keep the site dark, polished, and space-like.
 - Preserve the central "command core" identity treatment unless there is a strong reason to revise it.
-- Keep the desktop universe layer cleaner than desktop galaxy drilldown scenes.
-- Do not reveal desktop planet/tool nodes before a galaxy is selected.
+- Keep the connected desktop map clean enough that regions and node clusters remain legible.
+- Preserve the bounded drag/zoom behavior instead of turning the map into an infinite wandering canvas.
 - Keep the mobile experience simpler than desktop, even if that means dropping the galaxy metaphor on phones.
 - Preserve closable overlays/panels and non-trapping interaction.
 - Keep copy concise and data-driven.
@@ -100,9 +102,9 @@ This is a good pattern to preserve. Future sessions should extend the structured
 ## Known Risks / Regressions To Avoid
 
 - Turning the homepage into a text-heavy lesson page
-- Breaking the desktop intro -> universe -> galaxy -> detail flow
+- Breaking the desktop intro -> boot -> connected map -> detail flow
 - Breaking the simplified mobile explorer flow
-- Showing planets/tools in the desktop universe view
+- Adding too many node effects, particles, or lines and making the desktop map stutter
 - Introducing UI that cannot be closed
 - Adding fragile remote asset dependencies without local fallback
 - Accidentally treating `docs/` legacy publish files as the main homepage source

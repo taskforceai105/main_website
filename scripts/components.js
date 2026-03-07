@@ -1,4 +1,4 @@
-import { galaxyVisualCatalog, logoCatalog } from "./data/logo-sources.js";
+import { logoCatalog } from "./data/logo-sources.js";
 
 const escapeHtml = (value) =>
   String(value)
@@ -47,85 +47,93 @@ const renderIntroTitle = (title) => {
   return `<span>${escapeHtml(title)}</span>`;
 };
 
-const renderGalaxyVisual = (galaxy) => {
-  const visual = galaxyVisualCatalog[galaxy.visualKey ?? galaxy.id];
+const buildDesktopConnections = (nodes) => {
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+  const seen = new Set();
 
-  if (!visual) {
-    return "";
-  }
+  return nodes.flatMap((node) =>
+    (node.relatedNodeIds ?? [])
+      .map((relatedId) => {
+        const related = nodeMap.get(relatedId);
+        if (!related) {
+          return null;
+        }
+
+        const key = [node.id, relatedId].sort().join(":");
+        if (seen.has(key)) {
+          return null;
+        }
+
+        seen.add(key);
+        return {
+          id: key,
+          source: node,
+          target: related,
+        };
+      })
+      .filter(Boolean),
+  );
+};
+
+const renderDesktopRegion = (region, selectedNodeId, nodeMap) => {
+  const isActive = selectedNodeId && nodeMap.get(selectedNodeId)?.regionId === region.id;
 
   return `
-    <span class="galaxy-node__visual" aria-hidden="true">
-      <img src="${visual.src}" alt="${escapeHtml(visual.alt)}" />
-    </span>
+    <section
+      class="desktop-region${isActive ? " is-active" : ""}"
+      style="--region-x:${region.x}px; --region-y:${region.y}px; --region-w:${region.width}px; --region-h:${region.height}px; --region-accent:${region.accent};"
+      aria-hidden="true"
+    >
+      <div class="desktop-region__halo"></div>
+      <div class="desktop-region__label">
+        <span>${escapeHtml(region.subtitle)}</span>
+        <strong>${escapeHtml(region.title)}</strong>
+      </div>
+    </section>
   `;
 };
 
-const renderGalaxyNode = (galaxy) => `
-  <button
-    class="galaxy-node"
-    type="button"
-    style="--galaxy-x:${galaxy.universeX}%; --galaxy-y:${galaxy.universeY}%; --galaxy-accent:${galaxy.accent}; --galaxy-accent-soft:${galaxy.accentSoft};"
-    data-galaxy-button
-    data-galaxy-id="${galaxy.id}"
-  >
-    <span class="galaxy-node__rings" aria-hidden="true">
-      <span></span>
-      <span></span>
-      <span></span>
-    </span>
-    <span class="galaxy-node__orb" aria-hidden="true"></span>
-    ${renderGalaxyVisual(galaxy)}
-    <span class="galaxy-node__label">
-      <strong>${escapeHtml(galaxy.title)}</strong>
-      <span>${escapeHtml(galaxy.subtitle)}</span>
-    </span>
-  </button>
-`;
+const renderDesktopConnection = (connection, selectedNodeId) => {
+  const isActive =
+    selectedNodeId && (selectedNodeId === connection.source.id || selectedNodeId === connection.target.id);
 
-export const renderUniverseFocusPanel = (galaxy, mode) => `
-  <div class="universe-focus-card__header">
-    <div>
-      <span class="panel-kicker">Galaxy Focus</span>
-      <h3>${escapeHtml(galaxy.title)}</h3>
-    </div>
-    <span class="universe-focus-card__badge">${escapeHtml(`${galaxy.planets.length} nodes`)}</span>
-  </div>
-  <p class="universe-focus-card__subtitle">${escapeHtml(galaxy.subtitle)}</p>
-  <p class="universe-focus-card__copy">${escapeHtml(galaxy.why)}</p>
-  <p class="universe-focus-card__hint">
-    ${
-      mode === "mobile"
-        ? "Tap launch to zoom into this galaxy."
-        : "Click again, use Enter, or zoom in to enter this galaxy."
-    }
-  </p>
-  <div class="universe-focus-card__actions">
-    <button class="scene-button" type="button" data-enter-focused-galaxy>
-      ${escapeHtml(mode === "mobile" ? `Open ${galaxy.title}` : `Enter ${galaxy.title}`)}
+  return `
+    <line
+      class="desktop-connection${isActive ? " is-active" : ""}"
+      x1="${connection.source.x}"
+      y1="${connection.source.y}"
+      x2="${connection.target.x}"
+      y2="${connection.target.y}"
+    />
+  `;
+};
+
+const renderDesktopNode = (node, accent, selectedNodeId, relatedNodeIds) => {
+  const isSelected = node.id === selectedNodeId;
+  const isRelated = !isSelected && selectedNodeId && relatedNodeIds.has(node.id);
+  const scale = Math.max(0.86, Math.min(1.32, node.importance ?? 1));
+
+  return `
+    <button
+      class="desktop-node${isSelected ? " is-selected" : ""}${isRelated ? " is-related" : ""}"
+      type="button"
+      data-desktop-node
+      data-node-id="${node.id}"
+      style="--node-x:${node.x}px; --node-y:${node.y}px; --node-scale:${scale}; --node-accent:${accent};"
+      aria-label="${escapeHtml(`${node.name}, ${node.type}`)}"
+    >
+      <span class="desktop-node__halo" aria-hidden="true"></span>
+      <span class="desktop-node__ring" aria-hidden="true"></span>
+      <span class="desktop-node__badge mark-badge">
+        ${renderLogoMark(node.logoKey, node.name)}
+      </span>
+      <span class="desktop-node__label">
+        <strong>${escapeHtml(node.name)}</strong>
+        <span>${escapeHtml(node.type)}</span>
+      </span>
     </button>
-  </div>
-`;
-
-const renderPlanetNode = (planet, accent) => `
-  <button
-    class="planet-node planet-node--${planet.size}"
-    type="button"
-    style="--planet-x:${planet.focusX}%; --planet-y:${planet.focusY}%; --planet-accent:${accent};"
-    data-planet-button
-    data-planet-id="${planet.id}"
-  >
-    <span class="planet-node__halo" aria-hidden="true"></span>
-    <span class="planet-node__ring" aria-hidden="true"></span>
-    <span class="planet-node__badge mark-badge">
-      ${renderLogoMark(planet.logoKey, planet.name)}
-    </span>
-    <span class="planet-node__label">
-      <strong>${escapeHtml(planet.name)}</strong>
-      <span>${escapeHtml(planet.type)}</span>
-    </span>
-  </button>
-`;
+  `;
+};
 
 export const renderHeader = (content) => `
   <header class="app-header">
@@ -139,8 +147,7 @@ export const renderHeader = (content) => `
       </div>
     </div>
     <div class="app-header__actions">
-      <button class="header-chip" type="button" data-open-brief>Universe Brief</button>
-      <span class="header-chip header-chip--mode" data-device-badge>Desktop Universe</span>
+      <button class="header-chip" type="button" data-open-brief hidden>Map Brief</button>
       <span class="header-state" data-header-state>${escapeHtml(content.subtitle)}</span>
     </div>
   </header>
@@ -150,26 +157,47 @@ export const renderIntroOverlay = (content) => `
   <div class="intro-overlay" data-intro-overlay>
     <div class="intro-overlay__backdrop"></div>
     <div class="intro-overlay__panel">
-      <span class="intro-overlay__eyebrow">Command Cosmos</span>
+      <span class="intro-overlay__eyebrow">Det 105 Command Core</span>
       <h2 class="intro-overlay__title">${renderIntroTitle(content.title)}</h2>
       <p class="intro-overlay__subtitle">${escapeHtml(content.subtitle)}</p>
       <p class="intro-overlay__copy">${escapeHtml(content.teaser)}</p>
       <p class="intro-overlay__detail">${escapeHtml(content.introPrompt)}</p>
-      <div class="intro-mode-panel intro-mode-panel--auto">
-        <div class="intro-mode-panel__copy intro-mode-panel__copy--visible">
-          <span class="panel-kicker">Auto Detected</span>
-          <h3 data-intro-profile-title>Desktop Universe</h3>
-          <p data-intro-profile-copy>Rich cinematic navigation for larger hover-capable environments.</p>
-        </div>
-      </div>
       <div class="intro-overlay__actions">
-        <button class="scene-button" type="button" data-enter-primary>
+        <button class="scene-button scene-button--primary" type="button" data-enter-primary>
           ${escapeHtml(content.enterLabel)}
         </button>
       </div>
     </div>
   </div>
 `;
+
+export const renderBootOverlay = (steps, stepIndex, progress) => {
+  const activeStep = steps[Math.min(stepIndex, steps.length - 1)] ?? steps[0];
+
+  return `
+    <div class="boot-overlay__backdrop"></div>
+    <div class="boot-overlay__panel">
+      <span class="panel-kicker">System Entry</span>
+      <h2>Initializing AI Universe</h2>
+      <p class="boot-overlay__copy">${escapeHtml(activeStep?.copy ?? "Bringing the command interface online.")}</p>
+      <div class="boot-overlay__progress" aria-hidden="true">
+        <span style="--boot-progress:${progress};"></span>
+      </div>
+      <ol class="boot-overlay__steps" aria-label="Initialization progress">
+        ${steps
+          .map(
+            (step, index) => `
+              <li class="boot-overlay__step${index < stepIndex ? " is-complete" : ""}${index === stepIndex ? " is-active" : ""}">
+                <strong>${escapeHtml(step.label)}</strong>
+                <span>${escapeHtml(step.short)}</span>
+              </li>
+            `,
+          )
+          .join("")}
+      </ol>
+    </div>
+  `;
+};
 
 export const renderUniverseBrief = (content) => `
   <aside class="universe-brief" data-universe-brief>
@@ -203,9 +231,9 @@ const renderMobileToolCard = (galaxy, planet) => `
 
 export const renderMobileExplorer = (content, galaxies, activeGalaxy) => `
   <section class="mobile-explorer__hero">
-    <span class="panel-kicker">Mobile Explorer</span>
+    <span class="panel-kicker">Det 105 Directory</span>
     <h2>${escapeHtml(content.subtitle)}</h2>
-    <p>${escapeHtml("Explore AI tools and resources through a simplified category directory optimized for touch devices.")}</p>
+    <p>${escapeHtml("Explore AI tools and resources through a simplified category directory designed for touch-first browsing.")}</p>
   </section>
 
   <nav class="mobile-category-nav" aria-label="AI categories">
@@ -242,7 +270,92 @@ export const renderMobileExplorer = (content, galaxies, activeGalaxy) => `
   </section>
 `;
 
-export const renderScene = (content, galaxies) => `
+export const renderDesktopUniverse = ({
+  regions,
+  nodes,
+  dimensions,
+  selectedNodeId,
+  isFullscreen,
+  showBriefToggle,
+}) => {
+  const regionMap = new Map(regions.map((region) => [region.id, region]));
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+  const selectedNode = selectedNodeId ? nodeMap.get(selectedNodeId) ?? null : null;
+  const relatedNodeIds = new Set(selectedNode?.relatedNodeIds ?? []);
+  const connections = buildDesktopConnections(nodes);
+
+  return `
+    <div class="desktop-universe__controls">
+      <div class="desktop-map-controls">
+        <button class="zoom-control" type="button" data-desktop-zoom-out aria-label="Zoom out">-</button>
+        <button class="zoom-control" type="button" data-desktop-reset aria-label="Reset map view">Home</button>
+        <button class="zoom-control" type="button" data-desktop-zoom-in aria-label="Zoom in">+</button>
+      </div>
+      <div class="desktop-map-controls desktop-map-controls--meta">
+        <span class="desktop-map-controls__label">${escapeHtml(selectedNode ? `${selectedNode.name} selected` : "Connected AI ecosystem")}</span>
+        <button class="zoom-control zoom-control--wide" type="button" data-toggle-fullscreen aria-label="${
+          isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
+        }">
+          ${escapeHtml(isFullscreen ? "Exit full" : "Fullscreen")}
+        </button>
+      </div>
+    </div>
+
+    <div class="desktop-universe__viewport" data-desktop-viewport>
+      <div
+        class="desktop-universe__plane"
+        data-desktop-plane
+        style="--plane-width:${dimensions.width}px; --plane-height:${dimensions.height}px;"
+      >
+        <div class="desktop-universe__core" aria-hidden="true">
+          <span class="desktop-universe__core-rings">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+          <div class="desktop-universe__core-shell">
+            <img src="assets/det105.png" alt="" />
+          </div>
+          <div class="desktop-universe__core-copy">
+            <span>Det 105 command core</span>
+            <strong>Interconnected AI ecosystem</strong>
+          </div>
+        </div>
+
+        <svg
+          class="desktop-connections"
+          viewBox="0 0 ${dimensions.width} ${dimensions.height}"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          ${connections.map((connection) => renderDesktopConnection(connection, selectedNodeId)).join("")}
+        </svg>
+
+        <div class="desktop-regions">
+          ${regions.map((region) => renderDesktopRegion(region, selectedNodeId, nodeMap)).join("")}
+        </div>
+
+        <div class="desktop-nodes">
+          ${nodes
+            .map((node) => renderDesktopNode(node, regionMap.get(node.regionId)?.accent ?? "#74beff", selectedNodeId, relatedNodeIds))
+            .join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="desktop-universe__meta">
+      <p class="desktop-universe__summary">
+        ${escapeHtml(
+          showBriefToggle
+            ? "Drag to pan, use the mouse wheel to zoom, and click any node for a briefing."
+            : "Mapped AI tools, model ecosystems, and learning fundamentals in one connected command field.",
+        )}
+      </p>
+    </div>
+  `;
+};
+
+export const renderScene = (content) => `
   <main class="scene-shell">
     <section class="scene-stage" data-scene-stage>
       ${renderStarLayer(120, "deep")}
@@ -253,137 +366,64 @@ export const renderScene = (content, galaxies) => `
       <div class="nebula nebula--south" aria-hidden="true"></div>
       <div class="scene-vignette" aria-hidden="true"></div>
       <div class="scene-grid" aria-hidden="true"></div>
-      <div class="scene-travel" aria-hidden="true"></div>
       <aside class="scene-hint" data-scene-hint hidden></aside>
-      <div class="scene-zoom" data-scene-zoom hidden></div>
 
-      <div class="universe-camera" data-universe-camera>
-        <div class="command-core" data-command-core>
-          <span class="command-core__rings" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-          <div class="command-core__shell">
-            <div class="command-core__logo-wrap">
-              <img src="assets/det105.png" alt="Det 105 AI Task Force logo" class="command-core__logo" />
-            </div>
-          </div>
-          <div class="command-core__text">
-            <p>Det 105 Command Core</p>
-            <strong>AI Universe Hub</strong>
-            <span>Central identity node for galaxy-scale exploration.</span>
-          </div>
-        </div>
-
-        <div class="universe-layer" data-universe-layer>
-          ${galaxies.map(renderGalaxyNode).join("")}
-        </div>
-      </div>
-
-      <aside class="universe-focus-card" data-universe-focus hidden></aside>
-
-      <div class="focus-layer" data-focus-layer aria-live="polite"></div>
-
+      <section class="desktop-universe" data-desktop-universe hidden></section>
       <section class="mobile-explorer" data-mobile-explorer hidden></section>
 
       ${renderUniverseBrief(content)}
 
       <aside class="detail-panel" data-detail-panel hidden></aside>
+      <section class="boot-overlay" data-boot-overlay hidden></section>
     </section>
 
     ${renderIntroOverlay(content)}
   </main>
 `;
 
-export const renderFocusScene = (galaxy, mode) => `
-  <div
-    class="focus-scene"
-    style="--focus-accent:${galaxy.accent}; --focus-accent-soft:${galaxy.accentSoft};"
-  >
-    <div class="focus-scene__toolbar">
-      <button class="back-control" type="button" data-back-universe>
-        Back to Universe
-      </button>
-      <span class="focus-scene__meta">Galaxy Drilldown</span>
-    </div>
-
-    <div class="focus-galaxy">
-      <span class="focus-galaxy__mist focus-galaxy__mist--a" aria-hidden="true"></span>
-      <span class="focus-galaxy__mist focus-galaxy__mist--b" aria-hidden="true"></span>
-      <span class="focus-galaxy__mist focus-galaxy__mist--c" aria-hidden="true"></span>
-      <div class="focus-galaxy__visual" aria-hidden="true">
-        <img src="${galaxyVisualCatalog[galaxy.visualKey ?? galaxy.id]?.src ?? ""}" alt="" />
-      </div>
-      <div class="focus-galaxy__core">
-        <span class="focus-galaxy__core-rings" aria-hidden="true">
-          <span></span>
-          <span></span>
-        </span>
-        <div class="focus-galaxy__core-copy">
-          <span class="panel-kicker">Destination Locked</span>
-          <h2>${escapeHtml(galaxy.focusTitle)}</h2>
-          <p>${escapeHtml(galaxy.focusCopy)}</p>
-        </div>
-      </div>
-
-      <div class="focus-planets">
-        <div class="focus-planets__header">
-          <span class="panel-kicker">Tool Orbit</span>
-          <p>${
-            mode === "mobile"
-              ? "Tap a tool node to open its briefing."
-              : "Click a tool node to inspect it, or wheel out to retreat to the universe."
-          }</p>
-        </div>
-        ${galaxy.planets.map((planet) => renderPlanetNode(planet, galaxy.accent)).join("")}
-      </div>
-    </div>
+export const renderDetailPanel = ({ title, kicker, subtitle, description, why, href, backLabel, mode }) => `
+  <span class="detail-panel__handle" aria-hidden="true"></span>
+  <button class="panel-close" type="button" data-close-detail aria-label="Close detail panel">
+    Close
+  </button>
+  <span class="panel-kicker">${escapeHtml(kicker)}</span>
+  <h3>${escapeHtml(title)}</h3>
+  <p class="detail-panel__subtitle">${escapeHtml(subtitle)}</p>
+  <p class="detail-panel__description">${escapeHtml(description)}</p>
+  <div class="detail-panel__callout">
+    <span>Why it matters</span>
+    <p>${escapeHtml(why)}</p>
+  </div>
+  <p class="detail-panel__mode-hint">
+    ${
+      mode === "mobile"
+        ? "Use Close or Back to return to the directory."
+        : "Use Close, Back to map, or Escape to dismiss this briefing."
+    }
+  </p>
+  <div class="detail-panel__actions">
+    ${href ? `<a class="scene-button" href="${href}" target="_blank" rel="noreferrer">Open official link</a>` : ""}
+    <button class="scene-button scene-button--ghost" type="button" data-clear-selection>${escapeHtml(backLabel)}</button>
   </div>
 `;
 
-export const renderDetailPanel = ({ galaxy, planet, mode }) => {
-  const isPlanet = Boolean(planet);
-  const title = isPlanet ? planet.name : galaxy.focusTitle;
-  const typeLine = isPlanet ? `${galaxy.title} / ${planet.type}` : galaxy.subtitle;
-  const description = isPlanet ? planet.description : galaxy.description;
-  const why = isPlanet ? planet.goodFor : galaxy.why;
-  const href = isPlanet ? planet.href : null;
+export const renderSceneHint = ({ phase, isFullscreen }) => {
+  if (phase === "intro" || phase === "boot") {
+    return "";
+  }
+
+  if (phase === "mobile") {
+    return `
+      <span class="panel-kicker">Quick Navigation</span>
+      <p>Tap a category, then open any tool card for a concise briefing and official link.</p>
+    `;
+  }
 
   return `
-    <span class="detail-panel__handle" aria-hidden="true"></span>
-    <button class="panel-close" type="button" data-close-detail aria-label="Close detail panel">
-      Close
-    </button>
-    <span class="panel-kicker">${isPlanet ? "Tool Brief" : "Galaxy Brief"}</span>
-    <h3>${escapeHtml(title)}</h3>
-    <p class="detail-panel__subtitle">${escapeHtml(typeLine)}</p>
-    <p class="detail-panel__description">${escapeHtml(description)}</p>
-    <div class="detail-panel__callout">
-      <span>Why it matters</span>
-      <p>${escapeHtml(why)}</p>
-    </div>
-    <p class="detail-panel__mode-hint">
-      ${
-        mode === "mobile"
-          ? "Use Close or Back to return to the explorer."
-          : "Use Close, Back to galaxy, or Escape to dismiss this briefing."
-      }
-    </p>
-    <div class="detail-panel__actions">
-      ${
-        href
-          ? `<a class="scene-button" href="${href}" target="_blank" rel="noreferrer">Open official link</a>`
-          : ""
-      }
-      ${
-        isPlanet
-          ? `<button class="scene-button scene-button--ghost" type="button" data-back-galaxy>${
-              mode === "mobile" ? "Back to explorer" : "Back to galaxy"
-            }</button>`
-          : ""
-      }
-    </div>
+    <span class="panel-kicker">Universe Navigation</span>
+    <p>Drag to pan, use the mouse wheel to zoom, and click nodes to inspect the connected AI ecosystem.${
+      isFullscreen ? " Press Escape to leave fullscreen." : ""
+    }</p>
   `;
 };
 
@@ -395,35 +435,3 @@ export const renderFooter = (content) => `
     </div>
   </footer>
 `;
-
-export const renderSceneHint = (modeConfig, phase, galaxy) => {
-  if (!modeConfig || phase === "intro") {
-    return "";
-  }
-
-  const copy =
-    phase === "galaxy" ? modeConfig.galaxyHint : galaxy ? modeConfig.universeHint : modeConfig.introHint;
-
-  return `
-    <span class="panel-kicker">${escapeHtml(modeConfig.label)} Mode</span>
-    <p>${escapeHtml(copy)}</p>
-  `;
-};
-
-export const renderZoomControls = (mode, phase, hasFocusedGalaxy) => {
-  if (!mode || phase === "intro") {
-    return "";
-  }
-
-  return `
-    <button class="zoom-control" type="button" data-zoom-out aria-label="Zoom out">
-      -
-    </button>
-    <span class="zoom-control__label">${escapeHtml(
-      phase === "galaxy" ? "Galaxy" : hasFocusedGalaxy ? "Focused" : "Overview",
-    )}</span>
-    <button class="zoom-control" type="button" data-zoom-in aria-label="Zoom in">
-      +
-    </button>
-  `;
-};
