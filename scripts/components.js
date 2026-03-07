@@ -21,7 +21,8 @@ const getLogoMeta = (logoKey, label) => {
 
 export const renderMarkBadge = (logoKey, label, extraClass = "") => {
   const { logo, fallbackText, surface } = getLogoMeta(logoKey, label);
-  const className = `mark-badge mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}`;
+  const modeClass = !logo || logo.type !== "image" ? "mark-badge--fallback" : "mark-badge--image";
+  const className = `mark-badge ${modeClass} mark-badge--${surface}${extraClass ? ` ${extraClass}` : ""}`;
 
   if (!logo || logo.type !== "image") {
     return `

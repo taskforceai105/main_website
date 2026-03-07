@@ -1,13 +1,13 @@
 # Resource Audit
 
-This file records the current outbound resources and brand-asset decisions for the Det 105 AI universe homepage.
+This file records the current outbound resources and brand-asset decisions for the Det 105 AI directory homepage.
 
 ## What Was Audited In This Pass
 
 - Tool names and categories in `scripts/data/universe.js`
-- Outbound links for the live galaxy/tool nodes
+- Outbound links for the live directory items
 - Local logo source metadata in `scripts/data/logo-sources.js`
-- The current fallback strategy for tools without a clean public mark
+- The current fallback strategy for items without a clean public mark
 
 ## Link Strategy
 
@@ -44,18 +44,25 @@ This file records the current outbound resources and brand-asset decisions for t
 
 ## Current Asset Notes
 
-- Most brand marks now use local files under `assets/logos/`.
-- `DeepSeek`, `Kimi`, and `MiniMax` are now present in the desktop connected map and currently use deliberate monogram fallbacks.
-- Newly added local assets in this pass:
-  - `github.svg`
-  - `elicit.ico`
-  - `runway.ico`
-  - `lmstudio.ico`
-- The six galaxy visuals in `assets/galaxies/` are custom local SVGs created for this site's command-cosmos design system.
-- `NotebookLM` still uses a monogram fallback because a stable public product mark was not reliably exposed during this pass.
+- The live card system now uses local image assets for most product items under `assets/logos/`.
+- The current live directory split is:
+  - `46` live items using image logos
+  - `10` live items still using fallback treatment
+- Remaining fallbacks are currently:
+  - `NotebookLM`
+  - `Midjourney`
+  - `Leonardo AI`
+  - `AutoGen`
+  - the non-brand fundamentals entries such as `Prompting` and `Verification`
+- The canonical asset/source manifest is now `scripts/data/logo-sources.js`, with a human-readable summary in `assets/logos/SOURCES.md`.
+- The six galaxy visuals in `assets/galaxies/` are legacy custom SVGs from an older map-oriented UI direction and are not part of the current live homepage.
 
 ## Known Follow-Up Checks
 
 - Recheck outbound resource accuracy periodically; product URLs and branding can change.
-- If a cleaner official NotebookLM mark becomes available, replace the monogram fallback.
+- If cleaner official/public transparent marks become available, prioritize replacing:
+  - `NotebookLM`
+  - `Leonardo AI`
+  - `Midjourney`
+  - `AutoGen`
 - Real-device review is still warranted for how outbound-link cards feel inside the current mobile detail sheet.

@@ -647,38 +647,46 @@ button {
   flex: 0 0 auto;
   width: 58px;
   height: 58px;
-  border-radius: 18px;
+  border-radius: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.mark-badge--image {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.mark-badge--fallback {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(12, 21, 40, 0.94), rgba(7, 13, 26, 0.96));
+  box-shadow: inset 0 0 22px rgba(125, 190, 255, 0.08);
 }
 
 .mark-badge--light {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 236, 255, 0.94));
-  color: #08121f;
+  color: #f2f8ff;
 }
 
 .mark-badge--dark {
-  background: linear-gradient(180deg, rgba(7, 12, 24, 0.96), rgba(13, 24, 42, 0.96));
   color: #eff6ff;
 }
 
 .mark-badge--clear {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(108, 182, 255, 0.2), rgba(7, 14, 30, 0.94));
   color: #eff6ff;
 }
 
 .mark-badge__image {
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 8px 18px rgba(3, 9, 22, 0.18));
 }
 
 .mark-badge__image--contain {
   object-fit: contain;
-  padding: 10px;
 }
 
 .mark-badge__image--cover {
@@ -691,6 +699,17 @@ button {
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+.tool-card__badge {
+  width: 54px;
+  height: 54px;
+}
+
+.detail-panel__badge {
+  width: 72px;
+  height: 72px;
+  padding: 10px;
 }
 
 .mark-badge__mono[hidden] {
