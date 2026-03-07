@@ -1,3 +1,5 @@
+import { stripBasePath, withBasePath } from "./site-paths.js";
+
 const navItems = [
   { label: "AI Directory", href: "/ai-directory/" },
   { label: "Option A", href: "/option-a/" },
@@ -19,9 +21,9 @@ const normalizePath = (path) => {
 const renderNav = (currentPath) => `
   <header class="site-nav">
     <div class="site-nav__inner">
-      <a class="site-nav__brand" href="/" aria-label="Det 105 AI Task Force home">
+      <a class="site-nav__brand" href="${withBasePath("/")}" aria-label="Det 105 AI Task Force home">
         <span class="site-nav__crest">
-          <img src="/assets/det105.png" alt="" />
+          <img src="${withBasePath("/assets/det105.png")}" alt="" />
         </span>
         <span class="site-nav__brand-copy">
           <strong>Det 105 AI Task Force</strong>
@@ -50,7 +52,7 @@ const renderNav = (currentPath) => `
             (item) => `
               <a
                 class="site-nav__link${normalizePath(item.href) === currentPath ? " is-active" : ""}"
-                href="${item.href}"
+                href="${withBasePath(item.href)}"
               >
                 ${item.label}
               </a>
@@ -68,7 +70,7 @@ const init = () => {
     return;
   }
 
-  const currentPath = normalizePath(window.location.pathname);
+  const currentPath = normalizePath(stripBasePath(window.location.pathname));
   mount.innerHTML = renderNav(currentPath);
 
   const toggle = mount.querySelector("[data-site-nav-toggle]");

@@ -110,10 +110,12 @@ This is the pattern to preserve. Future sessions should extend the structured da
 - AI directory page: `ai-directory/index.html`
 - Main state logic: `scripts/app.js`
 - Shared nav logic: `scripts/site-nav.js`
+- Pages path handling: `scripts/site-paths.js`
+- Static build step: `scripts/build_pages.py`
 - Render helpers: `scripts/components.js`
 - Content/config: `scripts/data/universe.js`, `scripts/data/logo-sources.js`
 - Primary stylesheet: `styles.css`
-- Netlify deployment: root publish, no build step
+- GitHub Pages deployment: GitHub Actions builds a `dist/` artifact with `python3 scripts/build_pages.py`
 
 ## Known Risks / Regressions To Avoid
 
@@ -124,6 +126,7 @@ This is the pattern to preserve. Future sessions should extend the structured da
 - Leaving broken logo states in the UI
 - Adding fragile remote asset dependencies without local fallback
 - Accidentally treating `docs/` legacy publish files as the main homepage source
+- Reintroducing root-only path assumptions that break under GitHub Pages project-path hosting
 
 ## Uncertainty To Keep In Mind
 

@@ -1,4 +1,5 @@
 import { logoCatalog } from "./data/logo-sources.js";
+import { withBasePath } from "./site-paths.js";
 
 const escapeHtml = (value) =>
   String(value)
@@ -35,7 +36,7 @@ export const renderMarkBadge = (logoKey, label, extraClass = "") => {
   return `
     <span class="${className}">
       <img
-        src="${logo.src.startsWith("/") ? logo.src : `/${logo.src}`}"
+        src="${withBasePath(logo.src.startsWith("/") ? logo.src : `/${logo.src}`)}"
         alt="${escapeHtml(logo.alt)}"
         class="mark-badge__image mark-badge__image--${logo.fit}"
         loading="lazy"

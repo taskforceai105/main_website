@@ -21,6 +21,22 @@ Then open `http://localhost:4173`.
 - Home: `http://localhost:4173/`
 - AI Directory: `http://localhost:4173/ai-directory/`
 
+## GitHub Pages deployment
+
+This repo now deploys to GitHub Pages through GitHub Actions.
+
+- Workflow: `.github/workflows/deploy-pages.yml`
+- Static build artifact: `dist/`
+- Local build command: `python3 scripts/build_pages.py`
+
+The build is intentionally lightweight. It copies the static site into `dist/` and preserves the current HTML/CSS/ES-module structure for GitHub Pages.
+
+Important notes:
+
+- The site is configured for GitHub Pages project-path hosting such as `/main_website/`.
+- Shared nav links and logo paths detect the Pages base path automatically at runtime.
+- In the GitHub repository settings, set `Pages` to deploy from `GitHub Actions`.
+
 ## Edit content
 
 - Update category, tool, and copy data in `scripts/data/universe.js`.
@@ -34,12 +50,11 @@ Then open `http://localhost:4173`.
 - Source notes are tracked in `scripts/data/logo-sources.js`.
 - Some concept nodes intentionally use monogram fallbacks when no clean public product asset is exposed.
 
-## Netlify
+## Static hosting notes
 
-- Publish directory: `.`
-- Build command: none required
-
-This repo is a static site and does not depend on a Node build step.
+- No framework or Node bundler is required.
+- The site remains plain static HTML, CSS, and ES modules.
+- GitHub Pages deployment publishes the built `dist/` artifact rather than the repository root.
 
 ## Project Context Files
 

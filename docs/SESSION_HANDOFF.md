@@ -6,7 +6,7 @@ This repo is currently a static site, not a framework app.
 
 - No `package.json`
 - No Node/Vite/Next/Astro build pipeline
-- Netlify config in `netlify.toml` publishes the repository root
+- GitHub Pages deploys through GitHub Actions
 - Primary landing page entry is root `index.html`
 
 ## Framework / Stack
@@ -26,11 +26,13 @@ This repo is currently a static site, not a framework app.
 - `scripts/app.js`: app state, search/filter logic, detail panel state, and event wiring
 - `scripts/components.js`: render functions for header, hero, category overview, toolbar, cards, detail panel, and footer
 - `scripts/site-nav.js`: shared top navigation renderer and mobile menu behavior
+- `scripts/site-paths.js`: runtime base-path detection for GitHub Pages project-path hosting
+- `scripts/build_pages.py`: lightweight build script that copies the deployable site into `dist/`
 - `scripts/data/universe.js`: site copy plus structured tool/category data
 - `scripts/data/logo-sources.js`: logo catalog and source metadata
 - `assets/det105.png`: current brand/crest image used in the header
 - `assets/logos/`: local logo copies and monogram-supporting assets
-- `netlify.toml`: root publish config
+- `.github/workflows/deploy-pages.yml`: GitHub Pages deploy workflow
 
 ## Homepage Components / Experience
 
@@ -123,15 +125,17 @@ Note:
 
 ## Deployment Notes
 
-- Netlify publishes `.` with no build command.
-- Root `index.html` is the canonical landing homepage for Netlify.
+- GitHub Pages deployment uses `.github/workflows/deploy-pages.yml`.
+- The build step is `python3 scripts/build_pages.py`.
+- The static output directory is `dist/`.
+- Root `index.html` is still the canonical source landing page in the repo.
 - The AI directory is a separate static route under `ai-directory/`.
-- There is also a `docs/` directory from earlier GitHub Pages-oriented work:
+- Runtime nav/logo paths are GitHub Pages-aware through `scripts/site-paths.js`.
+- There is also a `docs/` directory from earlier publishing experiments:
   - `docs/index.html` points back to root assets via `<base href="../" />`
   - `docs/styles.css` appears to be an old/stale stylesheet and is not the root homepage stylesheet
-  - `docs/.nojekyll` and root `.nojekyll` both exist
 
-Future sessions should treat `docs/` carefully and avoid assuming it is the live homepage source.
+Future sessions should treat `docs/` carefully and avoid assuming it is part of the live Pages artifact.
 
 ## Responsive / Layout Notes
 
@@ -158,8 +162,10 @@ This simplification pass was validated with:
 
 - `git diff --check`
 - JS module import smoke check for `scripts/app.js`
+- JS module import smoke check for `scripts/site-nav.js` and `scripts/site-paths.js`
 - JS data import check confirming `directoryItems.length === 56`
-- Headless Chrome screenshots of desktop, mobile portrait, and mobile landscape for the rebuilt directory shell
+- `python3 scripts/build_pages.py`
+- local HTTP verification of `/main_website/` and `/main_website/ai-directory/` through a simulated GitHub Pages project path
 
 ## What A New Session Should Inspect First
 

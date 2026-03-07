@@ -96,23 +96,24 @@ Regression warnings:
 
 - Do not delete structured data casually without confirming it is unused.
 
-### 6. Preserve performance and Netlify compatibility
+### 6. Preserve performance and GitHub Pages compatibility
 
 Priority: Medium
 
 Goal:
-Keep the site lightweight and easy to deploy on Netlify with the existing root-static setup.
+Keep the site lightweight and easy to deploy on GitHub Pages with the current static `dist/` build artifact.
 
 Acceptance criteria:
 
-- Root `index.html` remains deployable as a static entry.
-- `netlify.toml` root publish assumptions still hold unless intentionally changed.
-- Changes do not introduce an unnecessary build dependency.
+- `python3 scripts/build_pages.py` continues producing a valid `dist/` artifact.
+- The GitHub Pages workflow remains valid and aligned with the actual output directory.
+- Changes do not introduce an unnecessary framework/toolchain dependency.
 
 Regression warnings:
 
 - Do not add a framework/toolchain unless the user explicitly wants that tradeoff.
-- Do not make `docs/` the accidental source of truth for Netlify deployment.
+- Do not break project-path asset or navigation handling for GitHub Pages.
+- Do not make `docs/` the accidental source of truth for deployment.
 
 ## Nice-To-Haves
 
@@ -128,5 +129,5 @@ Regression warnings:
 - Closable detail panel behavior
 - Strong logo fallback handling
 - Dark modern visual language
-- Netlify root-static deployment
+- GitHub Pages static deployment
 - Structured content and asset metadata files
